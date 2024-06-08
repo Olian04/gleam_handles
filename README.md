@@ -1,7 +1,7 @@
 [![Package Version](https://img.shields.io/hexpm/v/handlebars)](https://hex.pm/packages/handlebars)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/handlebars/)
 
-# handlebars
+# handles
 
 `handles` is a templating language in pure Gleam. Heavily inspired by  [mustache](https://mustache.github.io/) and [Handlebars.js](https://github.com/handlebars-lang/handlebars.js).
 
@@ -10,7 +10,7 @@ gleam add handlebars
 ```
 
 ```gleam
-import handlebars
+import handles
 
 pub fn main() {
   // TODO: An example of the project in use
