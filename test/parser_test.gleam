@@ -1,51 +1,77 @@
-import gleam/iterator
 import gleeunit/should
 import parser
 
 pub fn parser_should_return_correct_when_parsing_empty_string_test() {
-  should.be_ok(parser.parse(""))
-  |> iterator.to_list
-  |> should.equal([parser.Template(0, 0, "")])
+  parser.parse("")
+  |> should.be_ok
+  |> should.be_ok
+  |> should.equal([parser.Constant(0, 0, "")])
 }
 
 pub fn parser_should_return_correct_when_parsing_hello_world_test() {
-  should.be_ok(parser.parse("Hello {{name}}!"))
-  |> iterator.to_list
+  parser.parse("Hello {{name}}!")
+  |> should.be_ok
+  |> should.be_ok
   |> should.equal([
-    parser.Template(0, 6, "Hello "),
-    parser.Expression(8, 12, "name"),
-    parser.Template(14, 15, "!"),
+    parser.Constant(0, 6, "Hello "),
+    parser.Property(8, 12, ["name"]),
+    parser.Constant(14, 15, "!"),
   ])
 }
 
 pub fn parser_should_return_correct_when_passed_one_tag_test() {
-  should.be_ok(parser.parse("{{foo}}"))
-  |> iterator.to_list
+  parser.parse("{{foo}}")
+  |> should.be_ok
+  |> should.be_ok
   |> should.equal([
-    parser.Template(0, 0, ""),
-    parser.Expression(2, 5, "foo"),
-    parser.Template(7, 7, ""),
+    parser.Constant(0, 0, ""),
+    parser.Property(2, 5, ["foo"]),
+    parser.Constant(7, 7, ""),
   ])
 }
 
 pub fn parser_should_return_correct_when_passed_two_tags_test() {
-  should.be_ok(parser.parse("{{foo}} {{bar}}"))
-  |> iterator.to_list
+  parser.parse("{{foo}} {{bar}}")
+  |> should.be_ok
+  |> should.be_ok
   |> should.equal([
-    parser.Template(0, 0, ""),
-    parser.Expression(2, 5, "foo"),
-    parser.Template(7, 8, " "),
-    parser.Expression(10, 13, "bar"),
-    parser.Template(15, 15, ""),
+    parser.Constant(0, 0, ""),
+    parser.Property(2, 5, ["foo"]),
+    parser.Constant(7, 8, " "),
+    parser.Property(10, 13, ["bar"]),
+    parser.Constant(15, 15, ""),
   ])
 }
 
 pub fn parser_should_return_parse_error_when_unexpected_token_test() {
-  should.be_error(parser.parse("{{foo}d"))
+  parser.parse("{{foo}d")
+  |> should.be_error
   |> should.equal(parser.UnexpectedToken(6, "d"))
 }
 
 pub fn parser_should_return_parse_error_when_unexpected_end_of_template_test() {
-  should.be_error(parser.parse("{{foo}"))
+  parser.parse("{{foo}")
+  |> should.be_error
   |> should.equal(parser.UnexpectedEof(6))
+}
+
+pub fn compiler_should_return_error_when_missing_block_kind_test() {
+  parser.parse("{{#}}")
+  |> should.be_ok
+  |> should.be_error
+  |> should.equal([parser.MissingBlockKind(2, 3)])
+}
+
+pub fn compiler_should_return_error_when_providing_arguments_to_end_block_test() {
+  parser.parse("{{/foo bar}}")
+  |> should.be_ok
+  |> should.be_error
+  |> should.equal([parser.UnexpectedBlockArgument(2, 10)])
+}
+
+pub fn compiler_should_return_error_when_providing_empty_expression_test() {
+  parser.parse("{{}}")
+  |> should.be_ok
+  |> should.be_error
+  |> should.equal([parser.EmptyExpression(2, 2)])
 }
