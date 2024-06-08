@@ -2,20 +2,20 @@ import gleam/iterator
 import gleam/string
 
 pub type Token {
-  Template(Int, Int, String)
-  Expression(Int, Int, String)
+  Template(start: Int, end: Int, str: String)
+  Expression(start: Int, end: Int, str: String)
 }
 
 pub type ParseError {
-  UnexpectedToken(Int, String)
-  UnexpectedEof(Int)
+  UnexpectedToken(index: Int, str: String)
+  UnexpectedEof(index: Int)
 }
 
 type ParserState {
-  Static(Int, Int, String)
-  Tag(Int, Int, String)
-  TagStart(Int)
-  TagEnd(Int)
+  Static(start: Int, end: Int, str: String)
+  Tag(start: Int, end: Int, str: String)
+  TagStart(start: Int)
+  TagEnd(start: Int)
 }
 
 fn step(
