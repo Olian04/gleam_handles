@@ -26,3 +26,23 @@ gleam run   # Run the project
 gleam test  # Run the tests
 gleam shell # Run an Erlang shell
 ```
+
+## Example blocks
+
+```handlebars
+{{#if some.prop}}
+  {{name}}
+{{/if}}
+```
+
+```handlebars
+{{#each some.prop}}
+  {{name}}
+{{/each}}
+```
+
+```handlebars
+{{#unless some.prop}}
+  {{name}}
+{{/unless}}
+```
