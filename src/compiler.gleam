@@ -42,7 +42,7 @@ pub fn compile(
               [] -> AstError(MissingBlockKind(start, end))
               _ -> AstError(ToManyBlockArguments(start, end))
             }
-          Ok(prop_path) -> Property(string.split(prop_path, "."))
+          Ok(_) -> Property(string.split(value, "."))
           Error(_) -> AstError(EmptyExpression(start, end))
         }
       }
