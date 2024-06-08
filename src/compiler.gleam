@@ -13,7 +13,7 @@ pub type AST {
   Block(kind: String, args: List(String), children: List(AST))
 }
 
-fn valid_block_pass(
+fn validation_pass(
   tokens: List(parser.Token),
   valid_blocks: List(String),
 ) -> List(Result(parser.Token, CompileError)) {
@@ -30,7 +30,7 @@ fn valid_block_pass(
   })
 }
 
-fn block_balance_pass(
+fn balance_pass(
   tokens: List(Result(parser.Token, CompileError)),
 ) -> List(Result(parser.Token, CompileError)) {
   let #(out, stack) =
@@ -63,7 +63,29 @@ fn block_balance_pass(
 }
 
 fn ast_transform_pass(tokens: List(parser.Token)) -> List(AST) {
-  todo
+  let #(_, out) =
+    tokens
+    |> list.fold_until(#(0, []), fn(acc, it) {
+      case it {
+        parser.Constant(_, _, value) ->
+          list.Continue(#(acc.0 + 1, list.append(acc.1, [Constant(value)])))
+        parser.Property(_, _, path) ->
+          list.Continue(#(acc.0 + 1, list.append(acc.1, [Property(path)])))
+        parser.BlockStart(_, _, kind, args) ->
+          list.Continue(#(
+            acc.0 + 1,
+            list.append(acc.1, [
+              Block(
+                kind,
+                args,
+                ast_transform_pass(list.split(tokens, acc.0 + 1).1),
+              ),
+            ]),
+          ))
+        parser.BlockEnd(_, _, _) -> list.Stop(acc)
+      }
+    })
+  out
 }
 
 pub fn compile(
@@ -72,8 +94,8 @@ pub fn compile(
 ) -> Result(List(AST), List(CompileError)) {
   case
     tokens
-    |> valid_block_pass(valid_blocks)
-    |> block_balance_pass
+    |> validation_pass(valid_blocks)
+    |> balance_pass
     |> result.partition
   {
     #(ok, []) -> Ok(ok |> ast_transform_pass)
