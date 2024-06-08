@@ -6,6 +6,11 @@ pub type Token {
   Expression(Int, Int, String)
 }
 
+pub type ParseError {
+  UnexpectedToken(Int, String)
+  UnexpectedEof(Int)
+}
+
 type ParserState {
   Static(Int, Int, String)
   Tag(Int, Int, String)
@@ -17,7 +22,7 @@ fn step(
   iter: iterator.Iterator(Token),
   state: ParserState,
   input: String,
-) -> Result(iterator.Iterator(Token), String) {
+) -> Result(iterator.Iterator(Token), ParseError) {
   case state {
     Static(start, end, str) ->
       case string.first(input) {
@@ -59,14 +64,14 @@ fn step(
             Tag(start, end + 1, string.append(str, char)),
             string.drop_left(input, 1),
           )
-        Error(_) -> Error("Unexpected EOF")
+        Error(_) -> Error(UnexpectedEof(end))
       }
     TagStart(start) ->
       case string.first(input) {
         Ok("{") ->
           step(iter, Tag(start + 1, start + 1, ""), string.drop_left(input, 1))
-        Ok(char) -> Error(string.append("Unexpected token ", char))
-        Error(_) -> Error("Unexpected EOF")
+        Ok(char) -> Error(UnexpectedToken(start, char))
+        Error(_) -> Error(UnexpectedEof(start))
       }
     TagEnd(start) ->
       case string.first(input) {
@@ -76,12 +81,12 @@ fn step(
             Static(start + 1, start + 1, ""),
             string.drop_left(input, 1),
           )
-        Ok(char) -> Error(string.append("Unexpected token ", char))
-        Error(_) -> Error("Unexpected EOF")
+        Ok(char) -> Error(UnexpectedToken(start, char))
+        Error(_) -> Error(UnexpectedEof(start))
       }
   }
 }
 
-pub fn parse(str: String) -> Result(iterator.Iterator(Token), String) {
-  step(iterator.empty(), Static(0, 0, ""), str)
+pub fn parse(template: String) -> Result(iterator.Iterator(Token), ParseError) {
+  step(iterator.empty(), Static(0, 0, ""), template)
 }
