@@ -38,7 +38,7 @@ fn resolve_position(
   }
 }
 
-pub fn parse_error(error: parser.ParseError, template: String) -> String {
+pub fn format_parse_error(error: parser.ParseError, template: String) -> String {
   case error {
     parser.UnexpectedEof(index) ->
       case resolve_position(template, index, Position(0, 0, 0)) {
