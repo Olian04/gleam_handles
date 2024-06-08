@@ -6,7 +6,7 @@
 `handles` is a templating language in pure Gleam. Heavily inspired by  [mustache](https://mustache.github.io/) and [Handlebars.js](https://github.com/handlebars-lang/handlebars.js).
 
 ```sh
-gleam add handlebars
+gleam add handles
 ```
 
 ```gleam
@@ -17,7 +17,7 @@ pub fn main() {
 }
 ```
 
-Further documentation can be found at <https://hexdocs.pm/handlebars>.
+Further documentation can be found at <https://hexdocs.pm/handles>.
 
 ## Development
 
