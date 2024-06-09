@@ -3,8 +3,8 @@ import gleam/string
 
 pub type Token {
   Constant(start: Int, end: Int, value: String)
-  Property(start: Int, end: Int, path: List(String))
-  BlockStart(start: Int, end: Int, kind: String, args: List(String))
+  Expression(start: Int, end: Int, expression: String)
+  BlockStart(start: Int, end: Int, kind: String, expression: String)
   BlockEnd(start: Int, end: Int, kind: String)
 }
 
@@ -27,8 +27,8 @@ type ParserState {
 }
 
 fn step(
-  acc: List(Result(Token, SyntaxError)),
   state: ParserState,
+  acc: List(Result(Token, SyntaxError)),
   input: String,
 ) -> Result(List(Result(Token, SyntaxError)), ParseError) {
   case state {
@@ -36,14 +36,14 @@ fn step(
       case string.first(input) {
         Ok("{") ->
           step(
-            [Ok(Constant(start, end, str)), ..acc],
             TagStart(end + 1),
+            [Ok(Constant(start, end, str)), ..acc],
             string.drop_left(input, 1),
           )
         Ok(char) ->
           step(
-            acc,
             Static(start, end + 1, string.append(str, char)),
+            acc,
             string.drop_left(input, 1),
           )
         Error(_) -> Ok([Ok(Constant(start, end, str)), ..acc])
@@ -52,37 +52,35 @@ fn step(
       case string.first(input) {
         Ok("}") ->
           step(
+            TagEnd(end + 1),
             [
               {
                 let val = string.trim(value)
                 case string.first(val) {
                   Ok("#") ->
-                    case string.split(string.drop_left(val, 1), " ") {
-                      [""] -> Error(MissingBlockKind(start, end))
-                      [kind] -> Ok(BlockStart(start, end, kind, []))
-                      [kind, ..args] -> Ok(BlockStart(start, end, kind, args))
-                      _ -> panic as "This should never happen"
+                    case string.split_once(string.drop_left(val, 1), " ") {
+                      Ok(#(kind, body)) ->
+                        Ok(BlockStart(start, end, kind, body))
+                      Error(_) -> Error(MissingBlockKind(start, end))
                     }
                   Ok("/") ->
-                    case string.split(string.drop_left(val, 1), " ") {
-                      [""] -> Error(MissingBlockKind(start, end))
-                      [kind] -> Ok(BlockEnd(start, end, kind))
-                      [_, _, ..] -> Error(UnexpectedBlockArgument(start, end))
-                      [] -> panic as "This should never happen"
+                    case string.split_once(string.drop_left(val, 1), " ") {
+                      Ok(#(_, _)) -> Error(UnexpectedBlockArgument(start, end))
+                      Error(_) ->
+                        Ok(BlockEnd(start, end, string.drop_left(val, 1)))
                     }
-                  Ok(_) -> Ok(Property(start, end, string.split(value, ".")))
+                  Ok(_) -> Ok(Expression(start, end, value))
                   Error(_) -> Error(EmptyExpression(start, end))
                 }
               },
               ..acc
             ],
-            TagEnd(end + 1),
             string.drop_left(input, 1),
           )
         Ok(char) ->
           step(
-            acc,
             Tag(start, end + 1, string.append(value, char)),
+            acc,
             string.drop_left(input, 1),
           )
         Error(_) -> Error(UnexpectedEof(end))
@@ -90,7 +88,7 @@ fn step(
     TagStart(start) ->
       case string.first(input) {
         Ok("{") ->
-          step(acc, Tag(start + 1, start + 1, ""), string.drop_left(input, 1))
+          step(Tag(start + 1, start + 1, ""), acc, string.drop_left(input, 1))
         Ok(char) -> Error(UnexpectedToken(start, char))
         Error(_) -> Error(UnexpectedEof(start))
       }
@@ -98,8 +96,8 @@ fn step(
       case string.first(input) {
         Ok("}") ->
           step(
-            acc,
             Static(start + 1, start + 1, ""),
+            acc,
             string.drop_left(input, 1),
           )
         Ok(char) -> Error(UnexpectedToken(start, char))
@@ -111,7 +109,7 @@ fn step(
 pub fn parse(
   template: String,
 ) -> Result(Result(List(Token), List(SyntaxError)), ParseError) {
-  case step([], Static(0, 0, ""), template) {
+  case step(Static(0, 0, ""), [], template) {
     Ok(tokens) ->
       case
         tokens

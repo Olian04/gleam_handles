@@ -1,87 +1,104 @@
 import compiler
 import gleam/dynamic
+import gleam/io
 import gleam/list
-import gleam/string
+import gleam/result
+import gleam/string_builder
 
 pub type RuntimeError {
-  UnableToResolveProperty(path: List(String))
+  UnableToResolveExpression(expression: String)
   UnknownBlock(kind: String)
+}
+
+pub type ExpressionType {
+  StringType
+  BoolType
+  ListType
 }
 
 pub fn run(
   ast: List(compiler.AST),
-  get_property: fn(List(String)) -> String,
+  resolve_expression: fn(String, ExpressionType) -> Result(dynamic.Dynamic, Nil),
 ) -> Result(String, List(RuntimeError)) {
   case
     ast
-    |> list.fold(#("", []), fn(acc, it) {
+    |> list.fold(#(string_builder.new(), []), fn(acc, it) {
       case it {
-        compiler.Constant(value) -> #(string.append(acc.0, value), acc.1)
-        compiler.Property(path) -> #(
-          string.append(acc.0, get_property(path)),
+        compiler.Constant(value) -> #(
+          string_builder.append(acc.0, value),
           acc.1,
         )
-        compiler.Block(kind, [], _) -> #(
-          acc.0,
-          list.append(acc.1, [UnknownBlock(kind)]),
-        )
-        compiler.Block(kind, [path_string, ..], children) ->
+        compiler.Expression(expression) ->
+          case
+            resolve_expression(expression, StringType)
+            |> result.try(fn(it) {
+              it
+              |> dynamic.string
+              |> result.nil_error
+            })
+          {
+            Ok(value) -> #(string_builder.append(acc.0, value), acc.1)
+            Error(_) -> #(acc.0, [
+              UnableToResolveExpression(expression),
+              ..acc.1
+            ])
+          }
+        compiler.Block(kind, "", _) -> #(acc.0, [UnknownBlock(kind), ..acc.1])
+        compiler.Block(kind, expression, children) ->
           case kind {
             "if" ->
               case
-                get_property(string.split(path_string, "."))
-                |> dynamic.from
-                |> dynamic.bool()
+                resolve_expression(expression, BoolType)
+                |> result.try(fn(it) {
+                  it
+                  |> dynamic.bool
+                  |> result.nil_error
+                })
               {
                 Ok(True) ->
-                  case run(children, get_property) {
-                    Ok(str) -> #(string.append(acc.0, str), acc.1)
-                    Error(_) -> #(
-                      acc.0,
-                      list.append(acc.1, [
-                        UnableToResolveProperty(string.split(path_string, ".")),
-                      ]),
-                    )
+                  case run(children, resolve_expression) {
+                    Ok(str) -> #(string_builder.append(acc.0, str), acc.1)
+                    Error(_) -> #(acc.0, [
+                      UnableToResolveExpression(expression),
+                      ..acc.1
+                    ])
                   }
                 Ok(False) -> acc
-                Error(_) -> #(
-                  acc.0,
-                  list.append(acc.1, [
-                    UnableToResolveProperty(string.split(path_string, ".")),
-                  ]),
-                )
+                Error(_) -> #(acc.0, [
+                  UnableToResolveExpression(expression),
+                  ..acc.1
+                ])
               }
             "unless" ->
               case
-                get_property(string.split(path_string, "."))
-                |> dynamic.from
-                |> dynamic.bool()
+                resolve_expression(expression, BoolType)
+                |> result.try(fn(it) {
+                  it
+                  |> dynamic.bool
+                  |> result.nil_error
+                })
               {
                 Ok(False) ->
-                  case run(children, get_property) {
-                    Ok(str) -> #(string.append(acc.0, str), acc.1)
-                    Error(_) -> #(
-                      acc.0,
-                      list.append(acc.1, [
-                        UnableToResolveProperty(string.split(path_string, ".")),
-                      ]),
-                    )
+                  case run(children, resolve_expression) {
+                    Ok(str) -> #(string_builder.append(acc.0, str), acc.1)
+                    Error(_) -> #(acc.0, [
+                      UnableToResolveExpression(expression),
+                      ..acc.1
+                    ])
                   }
                 Ok(True) -> acc
-                Error(_) -> #(
-                  acc.0,
-                  list.append(acc.1, [
-                    UnableToResolveProperty(string.split(path_string, ".")),
-                  ]),
-                )
+                Error(_) -> #(acc.0, [
+                  UnableToResolveExpression(expression),
+                  ..acc.1
+                ])
               }
-            "while" -> todo
-            _ -> #(acc.0, list.append(acc.1, [UnknownBlock(kind)]))
+            "each" -> todo
+            _ -> #(acc.0, [UnknownBlock(kind), ..acc.1])
           }
       }
     })
   {
-    #(ok, []) -> Ok(ok)
-    #(_, err) -> Error(err)
+    #(ok, []) -> Ok(string_builder.to_string(ok))
+    #(_, err) -> Error(list.reverse(err))
   }
 }

@@ -14,7 +14,7 @@ pub fn parser_should_return_correct_when_parsing_hello_world_test() {
   |> should.be_ok
   |> should.equal([
     parser.Constant(0, 6, "Hello "),
-    parser.Property(8, 12, ["name"]),
+    parser.Expression(8, 12, "name"),
     parser.Constant(14, 15, "!"),
   ])
 }
@@ -25,7 +25,7 @@ pub fn parser_should_return_correct_when_passed_one_tag_test() {
   |> should.be_ok
   |> should.equal([
     parser.Constant(0, 0, ""),
-    parser.Property(2, 5, ["foo"]),
+    parser.Expression(2, 5, "foo"),
     parser.Constant(7, 7, ""),
   ])
 }
@@ -36,9 +36,9 @@ pub fn parser_should_return_correct_when_passed_two_tags_test() {
   |> should.be_ok
   |> should.equal([
     parser.Constant(0, 0, ""),
-    parser.Property(2, 5, ["foo"]),
+    parser.Expression(2, 5, "foo"),
     parser.Constant(7, 8, " "),
-    parser.Property(10, 13, ["bar"]),
+    parser.Expression(10, 13, "bar"),
     parser.Constant(15, 15, ""),
   ])
 }
