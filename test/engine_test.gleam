@@ -2,6 +2,7 @@ import compiler
 import engine
 import gleam/dict
 import gleam/dynamic
+import gleam/list
 import gleeunit/should
 
 pub fn engine_should_return_correct_when_running_hello_world_test() {
@@ -99,4 +100,33 @@ pub fn engine_should_return_correct_when_using_falsy_unless_test() {
       |> dynamic.from,
   )
   |> should.equal("42")
+}
+
+pub fn engine_should_return_correct_when_using_empty_each_test() {
+  engine.run(
+    [
+      compiler.Block("each", ["list"], [
+        compiler.Property(["name"]),
+        compiler.Constant(", "),
+      ]),
+    ],
+    dict.new()
+      |> dict.insert(
+        "list",
+        list.new()
+          |> list.append([
+            dict.new()
+              |> dict.insert("name", "Knatte")
+              |> dynamic.from,
+            dict.new()
+              |> dict.insert("name", "Fnatte")
+              |> dynamic.from,
+            dict.new()
+              |> dict.insert("name", "Tjatte")
+              |> dynamic.from,
+          ]),
+      )
+      |> dynamic.from,
+  )
+  |> should.equal("Knatte, Fnatte, Tjatte, ")
 }

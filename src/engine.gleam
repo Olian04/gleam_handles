@@ -112,6 +112,17 @@ fn eval_if(
   }
 }
 
+fn eval_each(
+  ctx_list: List(dynamic.Dynamic),
+  children: List(compiler.AST),
+) -> String {
+  ctx_list
+  |> list.fold(string_builder.new(), fn(acc, ctx) {
+    string_builder.append(acc, run(children, ctx))
+  })
+  |> string_builder.to_string
+}
+
 pub fn run(ast: List(compiler.AST), ctx: dynamic.Dynamic) -> String {
   {
     use acc, it <- list.fold(ast, string_builder.new())
@@ -134,7 +145,12 @@ pub fn run(ast: List(compiler.AST), ctx: dynamic.Dynamic) -> String {
                 |> bool.negate
                 |> eval_if(children, ctx),
             )
-          "each" -> todo
+          "each" ->
+            string_builder.append(
+              acc,
+              get_as_list(ctx, path)
+                |> eval_each(children),
+            )
           _ -> panic as "Unknown block"
         }
     }
