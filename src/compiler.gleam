@@ -9,8 +9,8 @@ pub type CompileError {
 
 pub type AST {
   Constant(value: String)
-  Expression(body: String)
-  Block(kind: String, arg: String, children: List(AST))
+  Property(path: List(String))
+  Block(kind: String, path: List(String), children: List(AST))
 }
 
 fn validation_pass(
@@ -69,14 +69,14 @@ fn ast_transform_pass(tokens: List(parser.Token)) -> List(AST) {
       case it {
         parser.Constant(_, _, value) ->
           list.Continue(#(acc.0 + 1, [Constant(value), ..acc.1]))
-        parser.Expression(_, _, path) ->
-          list.Continue(#(acc.0 + 1, [Expression(path), ..acc.1]))
-        parser.BlockStart(_, _, kind, args) ->
+        parser.Property(_, _, path) ->
+          list.Continue(#(acc.0 + 1, [Property(path), ..acc.1]))
+        parser.BlockStart(_, _, kind, path) ->
           list.Continue(
             #(acc.0 + 1, [
               Block(
                 kind,
-                args,
+                path,
                 ast_transform_pass(list.split(tokens, acc.0 + 1).1),
               ),
               ..acc.1

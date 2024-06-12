@@ -1,5 +1,7 @@
 import compiler
 import engine
+import gleam/dict
+import gleam/dynamic
 import gleam/result
 import gleeunit
 import gleeunit/should
@@ -10,9 +12,14 @@ pub fn main() {
 }
 
 pub fn handles_hello_world_test() {
-  use res <- result.map(parser.parse("Hello World"))
+  use res <- result.map(parser.parse("Hello {{name}}"))
   use tokens <- result.map(res)
   use ast <- result.map(compiler.compile(tokens, []))
-  use str <- result.map(engine.run(ast, fn(_, _) { Error(Nil) }))
-  should.equal(str, "Hello World")
+  engine.run(
+    ast,
+    dict.new()
+      |> dict.insert("name", "World")
+      |> dynamic.from,
+  )
+  |> should.equal("Hello World")
 }

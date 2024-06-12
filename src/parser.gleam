@@ -3,8 +3,8 @@ import gleam/string
 
 pub type Token {
   Constant(start: Int, end: Int, value: String)
-  Expression(start: Int, end: Int, expression: String)
-  BlockStart(start: Int, end: Int, kind: String, expression: String)
+  Property(start: Int, end: Int, path: List(String))
+  BlockStart(start: Int, end: Int, kind: String, path: List(String))
   BlockEnd(start: Int, end: Int, kind: String)
 }
 
@@ -60,7 +60,7 @@ fn step(
                   Ok("#") ->
                     case string.split_once(string.drop_left(val, 1), " ") {
                       Ok(#(kind, body)) ->
-                        Ok(BlockStart(start, end, kind, body))
+                        Ok(BlockStart(start, end, kind, string.split(body, ".")))
                       Error(_) -> Error(MissingBlockKind(start, end))
                     }
                   Ok("/") ->
@@ -69,7 +69,7 @@ fn step(
                       Error(_) ->
                         Ok(BlockEnd(start, end, string.drop_left(val, 1)))
                     }
-                  Ok(_) -> Ok(Expression(start, end, value))
+                  Ok(_) -> Ok(Property(start, end, string.split(value, ".")))
                   Error(_) -> Error(EmptyExpression(start, end))
                 }
               },
