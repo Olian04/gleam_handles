@@ -3,7 +3,7 @@
 
 # handles
 
-`handles` is a templating language in pure Gleam. Heavily inspired by  [mustache](https://mustache.github.io/) and [Handlebars.js](https://github.com/handlebars-lang/handlebars.js).
+`handles` is a templating language written in pure Gleam. Heavily inspired by [mustache](https://mustache.github.io/) and [Handlebars.js](https://github.com/handlebars-lang/handlebars.js).
 
 ```sh
 gleam add handles
