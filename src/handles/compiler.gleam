@@ -62,30 +62,31 @@ fn balance_pass(
   ])
 }
 
-fn ast_transform_pass(tokens: List(parser.Token)) -> List(AST) {
-  let #(_, out) =
-    tokens
-    |> list.fold_until(#(0, []), fn(acc, it) {
-      case it {
+fn ast_transform_pass(
+  tokens: List(parser.Token),
+  index: Int,
+  ast: List(AST),
+) -> List(AST) {
+  case tokens {
+    [] -> list.reverse(ast)
+    [head, ..tail] -> {
+      case head {
         parser.Constant(_, _, value) ->
-          list.Continue(#(acc.0 + 1, [Constant(value), ..acc.1]))
+          ast_transform_pass(tail, index + 1, [Constant(value), ..ast])
         parser.Property(_, _, path) ->
-          list.Continue(#(acc.0 + 1, [Property(path), ..acc.1]))
-        parser.BlockStart(_, _, kind, path) ->
-          list.Continue(
-            #(acc.0 + 1, [
-              Block(
-                kind,
-                path,
-                ast_transform_pass(list.split(tokens, acc.0 + 1).1),
-              ),
-              ..acc.1
-            ]),
+          ast_transform_pass(tail, index + 1, [Property(path), ..ast])
+        parser.BlockStart(_, _, kind, path) -> {
+          let children = ast_transform_pass(tail, index + 1, [])
+          ast_transform_pass(
+            list.drop(tail, list.length(children)),
+            index + 1 + list.length(children),
+            [Block(kind, path, children), ..ast],
           )
-        parser.BlockEnd(_, _, _) -> list.Stop(acc)
+        }
+        parser.BlockEnd(_, _, _) -> list.reverse(ast)
       }
-    })
-  list.reverse(out)
+    }
+  }
 }
 
 pub fn compile(
@@ -98,7 +99,10 @@ pub fn compile(
     |> balance_pass
     |> result.partition
   {
-    #(ok, []) -> Ok(ok |> ast_transform_pass)
+    #([parser.Constant(_, _, ""), ..tokens], []) ->
+      // Remove the leading empty string present when the template starts with a tag
+      Ok(tokens |> ast_transform_pass(0, []))
+    #(tokens, []) -> Ok(tokens |> ast_transform_pass(0, []))
     #(_, err) -> Error(err)
   }
 }

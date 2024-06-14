@@ -16,7 +16,6 @@ const expected_tokens = [
 ]
 
 const expected_ast = [
-  compiler.Constant(""),
   compiler.Block(
     "each",
     ["knattarna"],
@@ -24,7 +23,7 @@ const expected_ast = [
       compiler.Constant("Hello "), compiler.Property(["name"]),
       compiler.Constant("\n"),
     ],
-  ), compiler.Constant(""),
+  ),
 ]
 
 const expected_output = "Hello Knatte
