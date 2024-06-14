@@ -62,26 +62,21 @@ fn balance_pass(
   ])
 }
 
-fn ast_transform_pass(
-  tokens: List(lexer.Token),
-  index: Int,
-  ast: List(AST),
-) -> List(AST) {
+fn ast_transform_pass(tokens: List(lexer.Token), ast: List(AST)) -> List(AST) {
   case tokens {
     [] -> list.reverse(ast)
     [head, ..tail] -> {
       case head {
         lexer.Constant(_, _, value) ->
-          ast_transform_pass(tail, index + 1, [Constant(value), ..ast])
+          ast_transform_pass(tail, [Constant(value), ..ast])
         lexer.Property(_, _, path) ->
-          ast_transform_pass(tail, index + 1, [Property(path), ..ast])
+          ast_transform_pass(tail, [Property(path), ..ast])
         lexer.BlockStart(_, _, kind, path) -> {
-          let children = ast_transform_pass(tail, index + 1, [])
-          ast_transform_pass(
-            list.drop(tail, list.length(children)),
-            index + 1 + list.length(children),
-            [Block(kind, path, children), ..ast],
-          )
+          let children = ast_transform_pass(tail, [])
+          ast_transform_pass(list.drop(tail, list.length(children)), [
+            Block(kind, path, children),
+            ..ast
+          ])
         }
         lexer.BlockEnd(_, _, _) -> list.reverse(ast)
       }
@@ -101,8 +96,8 @@ pub fn run(
   {
     #([lexer.Constant(_, _, ""), ..tokens], []) ->
       // Remove the leading empty string present when the template starts with a tag
-      Ok(tokens |> ast_transform_pass(0, []))
-    #(tokens, []) -> Ok(tokens |> ast_transform_pass(0, []))
+      Ok(tokens |> ast_transform_pass([]))
+    #(tokens, []) -> Ok(tokens |> ast_transform_pass([]))
     #(_, err) -> Error(err)
   }
 }

@@ -42,13 +42,13 @@ pub fn lexer_should_return_correct_when_passed_two_tags_test() {
 pub fn lexer_should_return_lex_error_when_unexpected_token_test() {
   lexer.run("{{foo}d")
   |> should.be_error
-  |> should.equal(lexer.UnexpectedToken(6, "d"))
+  |> should.equal(lexer.UnbalancedTag(2, 7))
 }
 
 pub fn lexer_should_return_lex_error_when_unexpected_end_of_template_test() {
   lexer.run("{{foo}")
   |> should.be_error
-  |> should.equal(lexer.UnexpectedEof(6))
+  |> should.equal(lexer.UnbalancedTag(2, 6))
 }
 
 pub fn compiler_should_return_error_when_missing_block_kind_test() {
@@ -66,5 +66,5 @@ pub fn compiler_should_return_error_when_providing_arguments_to_end_block_test()
 pub fn compiler_should_return_error_when_providing_empty_expression_test() {
   lexer.run("{{}}")
   |> should.be_error
-  |> should.equal(lexer.SyntaxError([lexer.EmptyExpression(2, 2)]))
+  |> should.equal(lexer.SyntaxError([lexer.MissingBody(2, 2)]))
 }

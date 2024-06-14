@@ -41,30 +41,16 @@ fn resolve_position(
 
 pub fn format_parse_error(error: lexer.LexError, template: String) -> String {
   case error {
-    lexer.UnexpectedEof(index) ->
+    lexer.UnbalancedTag(index, _) ->
       case resolve_position(template, index, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
-            "Unexpected end of template ",
+            "Tag is missing closing braces }} ",
             "(row=",
             int.to_string(row),
             ", col=",
             int.to_string(col),
             ")",
-          ])
-        OutOfBounds -> panic as "Unable to resolve error position in template"
-      }
-    lexer.UnexpectedToken(index, char) ->
-      case resolve_position(template, index, Position(0, 0, 0)) {
-        Position(_, row, col) ->
-          string.concat([
-            "Unexpected token ",
-            "(row=",
-            int.to_string(row),
-            ", col=",
-            int.to_string(col),
-            "): ",
-            char,
           ])
         OutOfBounds -> panic as "Unable to resolve error position in template"
       }
@@ -78,11 +64,11 @@ pub fn format_parse_error(error: lexer.LexError, template: String) -> String {
 
 pub fn format_syntax_error(error: lexer.SyntaxError, template: String) -> String {
   case error {
-    lexer.EmptyExpression(start, _) ->
+    lexer.MissingBody(start, _) ->
       case resolve_position(template, start, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
-            "Empty Expression ",
+            "Tag is missing a body ",
             "(row=",
             int.to_string(row),
             ", col=",
@@ -95,7 +81,7 @@ pub fn format_syntax_error(error: lexer.SyntaxError, template: String) -> String
       case resolve_position(template, start, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
-            "Unknown Block ",
+            "Tag is of unknown block kind ",
             "(row=",
             int.to_string(row),
             ", col=",
@@ -108,7 +94,7 @@ pub fn format_syntax_error(error: lexer.SyntaxError, template: String) -> String
       case resolve_position(template, start, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
-            "Unexpected Block Argument ",
+            "Tag is a closing block, which does not take any arguments ",
             "(row=",
             int.to_string(row),
             ", col=",
