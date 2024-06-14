@@ -12,6 +12,8 @@ gleam add handles
 ```gleam
 import handles
 import gleam/io
+import gleam/dict
+import gleam/dynamic
 
 pub fn main() {
   let assert Ok(template) = handles.prepare("Hello {{name}}")
