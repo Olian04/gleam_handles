@@ -39,7 +39,7 @@ fn resolve_position(
   }
 }
 
-pub fn format_parse_error(error: lexer.LexError, template: String) -> String {
+pub fn format_lex_error(error: lexer.LexError, template: String) -> String {
   case error {
     lexer.UnbalancedTag(index, _) ->
       case resolve_position(template, index, Position(0, 0, 0)) {

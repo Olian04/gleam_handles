@@ -4,19 +4,18 @@ import handles/engine
 import handles/lexer
 import handles/parser
 
-pub type TemplateError {
+pub type HandlesError {
   LexError(error: lexer.LexError)
   ParseError(error: List(parser.ParseError))
+  RuntimeError(error: engine.RuntimeError)
 }
 
 pub type Template {
   Template(ast: List(parser.AST))
 }
 
-pub fn prepare(template: String) -> Result(Template, TemplateError) {
-  use tokens <- result.try(
-    result.map_error(lexer.run(template), fn(err) { LexError(err) }),
-  )
+pub fn prepare(template: String) -> Result(Template, HandlesError) {
+  use tokens <- result.try(result.map_error(lexer.run(template), LexError))
   use ast <- result.try(
     result.map_error(parser.run(tokens, ["if", "unless", "each"]), fn(err) {
       ParseError(err)
@@ -28,7 +27,8 @@ pub fn prepare(template: String) -> Result(Template, TemplateError) {
 pub fn run(
   template: Template,
   ctx: dynamic.Dynamic,
-) -> Result(String, engine.RuntimeError) {
+) -> Result(String, HandlesError) {
   let Template(ast) = template
   engine.run(ast, ctx)
+  |> result.map_error(RuntimeError)
 }
