@@ -109,7 +109,7 @@ pub fn engine_should_return_correct_when_using_falsy_unless_test() {
   |> should.equal("42")
 }
 
-pub fn engine_should_return_correct_when_using_empty_each_test() {
+pub fn engine_should_return_correct_when_using_each_test() {
   engine.run(
     [
       compiler.Block("each", ["list"], [
@@ -131,10 +131,31 @@ pub fn engine_should_return_correct_when_using_empty_each_test() {
             dict.new()
               |> dict.insert("name", "Tjatte")
               |> dynamic.from,
-          ]),
+          ])
+          |> dynamic.from,
       )
       |> dynamic.from,
   )
   |> should.be_ok
   |> should.equal("Knatte, Fnatte, Tjatte, ")
+}
+
+pub fn engine_should_return_correct_when_using_empty_each_test() {
+  engine.run(
+    [
+      compiler.Block("each", ["list"], [
+        compiler.Property(["name"]),
+        compiler.Constant(", "),
+      ]),
+    ],
+    dict.new()
+      |> dict.insert(
+        "list",
+        list.new()
+          |> dynamic.from,
+      )
+      |> dynamic.from,
+  )
+  |> should.be_ok
+  |> should.equal("")
 }

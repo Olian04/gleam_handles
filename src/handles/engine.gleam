@@ -91,7 +91,7 @@ pub fn get_as_list(
   get_from_ctx(root_ctx, path)
   |> result.try(fn(value) {
     case dynamic.classify(value) {
-      "Bool" ->
+      "List" ->
         value
         |> dynamic.shallow_list
         |> result.map_error(fn(err) {
