@@ -1,5 +1,5 @@
-[![Package Version](https://img.shields.io/hexpm/v/handlebars)](https://hex.pm/packages/handlebars)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/handlebars/)
+[![Package Version](https://img.shields.io/hexpm/v/handles)](https://hex.pm/packages/handles)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/handles/)
 
 # handles
 
