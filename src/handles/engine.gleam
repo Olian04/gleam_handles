@@ -6,7 +6,7 @@ import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string_builder
-import handles/compiler
+import handles/parser
 
 pub type RuntimeError {
   UnexpectedTypeError(path: List(String), got: String, expected: List(String))
@@ -106,7 +106,7 @@ pub fn get_as_list(
 
 fn eval_if(
   condition: Bool,
-  children: List(compiler.AST),
+  children: List(parser.AST),
   ctx: dynamic.Dynamic,
 ) -> Result(String, RuntimeError) {
   case condition {
@@ -117,7 +117,7 @@ fn eval_if(
 
 fn eval_each(
   ctx_list: List(dynamic.Dynamic),
-  children: List(compiler.AST),
+  children: List(parser.AST),
 ) -> Result(String, RuntimeError) {
   {
     use acc, ctx <- list.fold(ctx_list, Ok(string_builder.new()))
@@ -129,18 +129,18 @@ fn eval_each(
 }
 
 pub fn run(
-  ast: List(compiler.AST),
+  ast: List(parser.AST),
   ctx: dynamic.Dynamic,
 ) -> Result(String, RuntimeError) {
   {
     use acc, it <- list.fold(ast, Ok(string_builder.new()))
     use acc <- result.try(acc)
     case it {
-      compiler.Constant(value) -> Ok(string_builder.append(acc, value))
-      compiler.Property(path) ->
+      parser.Constant(value) -> Ok(string_builder.append(acc, value))
+      parser.Property(path) ->
         get_as_string(ctx, path)
         |> result.map(string_builder.append(acc, _))
-      compiler.Block(kind, path, children) ->
+      parser.Block(kind, path, children) ->
         case kind {
           "if" ->
             get_as_bool(ctx, path)

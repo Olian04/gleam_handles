@@ -1,7 +1,7 @@
 import gleam/int
 import gleam/list
 import gleam/string
-import handles/parser
+import handles/lexer
 
 type Position {
   Position(index: Int, row: Int, col: Int)
@@ -39,9 +39,9 @@ fn resolve_position(
   }
 }
 
-pub fn format_parse_error(error: parser.ParseError, template: String) -> String {
+pub fn format_parse_error(error: lexer.LexError, template: String) -> String {
   case error {
-    parser.UnexpectedEof(index) ->
+    lexer.UnexpectedEof(index) ->
       case resolve_position(template, index, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
@@ -54,7 +54,7 @@ pub fn format_parse_error(error: parser.ParseError, template: String) -> String 
           ])
         OutOfBounds -> panic as "Unable to resolve error position in template"
       }
-    parser.UnexpectedToken(index, char) ->
+    lexer.UnexpectedToken(index, char) ->
       case resolve_position(template, index, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
@@ -68,7 +68,7 @@ pub fn format_parse_error(error: parser.ParseError, template: String) -> String 
           ])
         OutOfBounds -> panic as "Unable to resolve error position in template"
       }
-    parser.SyntaxError(errors) ->
+    lexer.SyntaxError(errors) ->
       errors
       |> list.fold("", fn(acc, err) {
         string.concat([acc, "\n", format_syntax_error(err, template)])
@@ -76,12 +76,9 @@ pub fn format_parse_error(error: parser.ParseError, template: String) -> String 
   }
 }
 
-pub fn format_syntax_error(
-  error: parser.SyntaxError,
-  template: String,
-) -> String {
+pub fn format_syntax_error(error: lexer.SyntaxError, template: String) -> String {
   case error {
-    parser.EmptyExpression(start, _) ->
+    lexer.EmptyExpression(start, _) ->
       case resolve_position(template, start, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
@@ -94,7 +91,7 @@ pub fn format_syntax_error(
           ])
         OutOfBounds -> panic as "Unable to resolve error position in template"
       }
-    parser.MissingBlockKind(start, _) ->
+    lexer.MissingBlockKind(start, _) ->
       case resolve_position(template, start, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([
@@ -107,7 +104,7 @@ pub fn format_syntax_error(
           ])
         OutOfBounds -> panic as "Unable to resolve error position in template"
       }
-    parser.UnexpectedBlockArgument(start, _) ->
+    lexer.UnexpectedBlockArgument(start, _) ->
       case resolve_position(template, start, Position(0, 0, 0)) {
         Position(_, row, col) ->
           string.concat([

@@ -2,18 +2,18 @@ import gleam/dict
 import gleam/dynamic
 import gleam/list
 import gleeunit/should
-import handles/compiler
 import handles/engine
+import handles/parser
 
 pub fn engine_should_return_correct_when_running_hello_world_test() {
-  engine.run([compiler.Constant("Hello World")], Nil |> dynamic.from)
+  engine.run([parser.Constant("Hello World")], Nil |> dynamic.from)
   |> should.be_ok
   |> should.equal("Hello World")
 }
 
 pub fn engine_should_return_correct_when_running_hello_name_test() {
   engine.run(
-    [compiler.Constant("Hello "), compiler.Property(["name"])],
+    [parser.Constant("Hello "), parser.Property(["name"])],
     dict.new()
       |> dict.insert("name", "Oliver")
       |> dynamic.from,
@@ -24,7 +24,7 @@ pub fn engine_should_return_correct_when_running_hello_name_test() {
 
 pub fn engine_should_return_correct_when_accessing_nested_property_test() {
   engine.run(
-    [compiler.Property(["foo", "bar"])],
+    [parser.Property(["foo", "bar"])],
     dict.new()
       |> dict.insert(
         "foo",
@@ -39,7 +39,7 @@ pub fn engine_should_return_correct_when_accessing_nested_property_test() {
 
 pub fn engine_should_return_correct_when_using_truthy_if_test() {
   engine.run(
-    [compiler.Block("if", ["bool"], [compiler.Property(["foo", "bar"])])],
+    [parser.Block("if", ["bool"], [parser.Property(["foo", "bar"])])],
     dict.new()
       |> dict.insert(
         "foo",
@@ -60,7 +60,7 @@ pub fn engine_should_return_correct_when_using_truthy_if_test() {
 
 pub fn engine_should_return_correct_when_using_falsy_if_test() {
   engine.run(
-    [compiler.Block("if", ["bool"], [compiler.Property(["foo", "bar"])])],
+    [parser.Block("if", ["bool"], [parser.Property(["foo", "bar"])])],
     dict.new()
       |> dict.insert(
         "bool",
@@ -75,7 +75,7 @@ pub fn engine_should_return_correct_when_using_falsy_if_test() {
 
 pub fn engine_should_return_correct_when_using_truthy_unless_test() {
   engine.run(
-    [compiler.Block("unless", ["bool"], [compiler.Property(["foo", "bar"])])],
+    [parser.Block("unless", ["bool"], [parser.Property(["foo", "bar"])])],
     dict.new()
       |> dict.insert(
         "bool",
@@ -90,7 +90,7 @@ pub fn engine_should_return_correct_when_using_truthy_unless_test() {
 
 pub fn engine_should_return_correct_when_using_falsy_unless_test() {
   engine.run(
-    [compiler.Block("unless", ["bool"], [compiler.Property(["foo", "bar"])])],
+    [parser.Block("unless", ["bool"], [parser.Property(["foo", "bar"])])],
     dict.new()
       |> dict.insert(
         "foo",
@@ -112,9 +112,9 @@ pub fn engine_should_return_correct_when_using_falsy_unless_test() {
 pub fn engine_should_return_correct_when_using_each_test() {
   engine.run(
     [
-      compiler.Block("each", ["list"], [
-        compiler.Property(["name"]),
-        compiler.Constant(", "),
+      parser.Block("each", ["list"], [
+        parser.Property(["name"]),
+        parser.Constant(", "),
       ]),
     ],
     dict.new()
@@ -143,9 +143,9 @@ pub fn engine_should_return_correct_when_using_each_test() {
 pub fn engine_should_return_correct_when_using_empty_each_test() {
   engine.run(
     [
-      compiler.Block("each", ["list"], [
-        compiler.Property(["name"]),
-        compiler.Constant(", "),
+      parser.Block("each", ["list"], [
+        parser.Property(["name"]),
+        parser.Constant(", "),
       ]),
     ],
     dict.new()
