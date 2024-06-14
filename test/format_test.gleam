@@ -1,6 +1,6 @@
-import format
+import handles/format
 import gleeunit/should
-import parser
+import handles/parser
 
 pub fn format_should_return_correct_string_for_unexpected_token_test() {
   let template = "{{foo}d"

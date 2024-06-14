@@ -1,6 +1,7 @@
 import gleam/int
+import gleam/list
 import gleam/string
-import parser
+import handles/parser
 
 type Position {
   Position(index: Int, row: Int, col: Int)
@@ -64,6 +65,58 @@ pub fn format_parse_error(error: parser.ParseError, template: String) -> String 
             int.to_string(col),
             "): ",
             char,
+          ])
+        OutOfBounds -> panic as "Unable to resolve error position in template"
+      }
+    parser.SyntaxError(errors) ->
+      errors
+      |> list.fold("", fn(acc, err) {
+        string.concat([acc, "\n", format_syntax_error(err, template)])
+      })
+  }
+}
+
+pub fn format_syntax_error(
+  error: parser.SyntaxError,
+  template: String,
+) -> String {
+  case error {
+    parser.EmptyExpression(start, _) ->
+      case resolve_position(template, start, Position(0, 0, 0)) {
+        Position(_, row, col) ->
+          string.concat([
+            "Empty Expression ",
+            "(row=",
+            int.to_string(row),
+            ", col=",
+            int.to_string(col),
+            ")",
+          ])
+        OutOfBounds -> panic as "Unable to resolve error position in template"
+      }
+    parser.MissingBlockKind(start, _) ->
+      case resolve_position(template, start, Position(0, 0, 0)) {
+        Position(_, row, col) ->
+          string.concat([
+            "Unknown Block ",
+            "(row=",
+            int.to_string(row),
+            ", col=",
+            int.to_string(col),
+            ")",
+          ])
+        OutOfBounds -> panic as "Unable to resolve error position in template"
+      }
+    parser.UnexpectedBlockArgument(start, _) ->
+      case resolve_position(template, start, Position(0, 0, 0)) {
+        Position(_, row, col) ->
+          string.concat([
+            "Unexpected Block Argument ",
+            "(row=",
+            int.to_string(row),
+            ", col=",
+            int.to_string(col),
+            ")",
           ])
         OutOfBounds -> panic as "Unable to resolve error position in template"
       }

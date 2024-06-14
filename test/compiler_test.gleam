@@ -1,6 +1,6 @@
-import compiler
 import gleeunit/should
-import parser
+import handles/compiler
+import handles/parser
 
 pub fn compiler_should_return_correct_when_compiling_no_tokens_test() {
   []

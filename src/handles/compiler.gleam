@@ -1,6 +1,6 @@
 import gleam/list
 import gleam/result
-import parser
+import handles/parser
 
 pub type CompileError {
   UnbalancedBlock(start: Int, end: Int, kind: String)

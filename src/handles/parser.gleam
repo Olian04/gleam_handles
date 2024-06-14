@@ -11,6 +11,7 @@ pub type Token {
 pub type ParseError {
   UnexpectedToken(index: Int, str: String)
   UnexpectedEof(index: Int)
+  SyntaxError(errors: List(SyntaxError))
 }
 
 pub type SyntaxError {
@@ -106,17 +107,15 @@ fn step(
   }
 }
 
-pub fn parse(
-  template: String,
-) -> Result(Result(List(Token), List(SyntaxError)), ParseError) {
+pub fn parse(template: String) -> Result(List(Token), ParseError) {
   case step(Static(0, 0, ""), [], template) {
     Ok(tokens) ->
       case
         tokens
         |> result.partition
       {
-        #(ok, []) -> Ok(Ok(ok))
-        #(_, err) -> Ok(Error(err))
+        #(ok, []) -> Ok(ok)
+        #(_, err) -> Error(SyntaxError(err))
       }
     Error(err) -> Error(err)
   }

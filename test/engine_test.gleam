@@ -1,12 +1,13 @@
-import compiler
-import engine
 import gleam/dict
 import gleam/dynamic
 import gleam/list
 import gleeunit/should
+import handles/compiler
+import handles/engine
 
 pub fn engine_should_return_correct_when_running_hello_world_test() {
   engine.run([compiler.Constant("Hello World")], Nil |> dynamic.from)
+  |> should.be_ok
   |> should.equal("Hello World")
 }
 
@@ -17,6 +18,7 @@ pub fn engine_should_return_correct_when_running_hello_name_test() {
       |> dict.insert("name", "Oliver")
       |> dynamic.from,
   )
+  |> should.be_ok
   |> should.equal("Hello Oliver")
 }
 
@@ -31,6 +33,7 @@ pub fn engine_should_return_correct_when_accessing_nested_property_test() {
       )
       |> dynamic.from,
   )
+  |> should.be_ok
   |> should.equal("42")
 }
 
@@ -51,6 +54,7 @@ pub fn engine_should_return_correct_when_using_truthy_if_test() {
       )
       |> dynamic.from,
   )
+  |> should.be_ok
   |> should.equal("42")
 }
 
@@ -65,6 +69,7 @@ pub fn engine_should_return_correct_when_using_falsy_if_test() {
       )
       |> dynamic.from,
   )
+  |> should.be_ok
   |> should.equal("")
 }
 
@@ -79,6 +84,7 @@ pub fn engine_should_return_correct_when_using_truthy_unless_test() {
       )
       |> dynamic.from,
   )
+  |> should.be_ok
   |> should.equal("")
 }
 
@@ -99,6 +105,7 @@ pub fn engine_should_return_correct_when_using_falsy_unless_test() {
       )
       |> dynamic.from,
   )
+  |> should.be_ok
   |> should.equal("42")
 }
 
@@ -128,5 +135,6 @@ pub fn engine_should_return_correct_when_using_empty_each_test() {
       )
       |> dynamic.from,
   )
+  |> should.be_ok
   |> should.equal("Knatte, Fnatte, Tjatte, ")
 }
