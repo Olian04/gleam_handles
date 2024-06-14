@@ -1,5 +1,6 @@
 import gleam/dict
 import gleam/dynamic
+import gleam/io
 import gleam/list
 import gleeunit
 import gleeunit/should
@@ -24,6 +25,7 @@ pub fn handles_hello_world_test() {
 pub fn handles_loop_test() {
   handles.prepare("{{#each knattarna}}Hello {{name}}\n{{/each}}")
   |> should.be_ok
+  |> io.debug
   |> handles.run(
     dict.new()
     |> dict.insert(
