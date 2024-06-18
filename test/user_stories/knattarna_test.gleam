@@ -1,70 +1,56 @@
-import gleam/dict
-import gleam/dynamic
-import gleam/list
+import gleam/string_builder
 import gleeunit/should
-import handles/engine
-import handles/lexer
-import handles/parser
+import handles/ctx
+import handles/internal/engine
+import handles/internal/parser
+import handles/internal/tokenizer
 
-const input_template = "{{#each knattarna}}Hello {{name}}\n{{/each}}"
+const input_template = "They are {{#each knattarna}}{{name}}, {{/each}}and Kalle"
+
+const input_context = ctx.Dict(
+  [
+    ctx.Prop(
+      "knattarna",
+      ctx.List(
+        [
+          ctx.Dict([ctx.Prop("name", ctx.Str("Knatte"))]),
+          ctx.Dict([ctx.Prop("name", ctx.Str("Fnatte"))]),
+          ctx.Dict([ctx.Prop("name", ctx.Str("Tjatte"))]),
+        ],
+      ),
+    ),
+  ],
+)
 
 const expected_tokens = [
-  lexer.Constant(0, 0, ""), lexer.BlockStart(2, 17, "each", ["knattarna"]),
-  lexer.Constant(19, 25, "Hello "), lexer.Property(27, 31, ["name"]),
-  lexer.Constant(33, 34, "\n"), lexer.BlockEnd(36, 41, "each"),
-  lexer.Constant(43, 43, ""),
+  tokenizer.Constant("They are "), tokenizer.EachBlockStart(["knattarna"]),
+  tokenizer.Property(["name"]), tokenizer.Constant(", "), tokenizer.EachBlockEnd,
+  tokenizer.Constant("and Kalle"),
 ]
 
 const expected_ast = [
-  parser.Block(
-    "each",
+  parser.Constant("They are "),
+  parser.EachBlock(
     ["knattarna"],
-    [
-      parser.Constant("Hello "), parser.Property(["name"]),
-      parser.Constant("\n"),
-    ],
-  ),
+    [parser.Property(["name"]), parser.Constant(", ")],
+  ), parser.Constant("and Kalle"),
 ]
 
-const expected_output = "Hello Knatte
-Hello Fnatte
-Hello Tjatte
-"
+const expected_output = "They are Knatte, Fnatte, Tjatte, and Kalle"
 
-pub fn lexer_should_return_correct_for_user_story_knattarna_test() {
-  lexer.run(input_template)
+pub fn tokenizer_should_return_correct_for_user_story_knattarna_test() {
+  tokenizer.run(input_template, 0, [])
   |> should.be_ok
   |> should.equal(expected_tokens)
 }
 
 pub fn parser_should_return_correct_for_user_story_knattarna_test() {
-  parser.run(expected_tokens, ["each"])
-  |> should.be_ok
+  parser.run(expected_tokens, [])
   |> should.equal(expected_ast)
 }
 
 pub fn engine_should_return_correct_for_user_story_knattarna_test() {
-  engine.run(
-    expected_ast,
-    dict.new()
-      |> dict.insert(
-        "knattarna",
-        list.new()
-          |> list.append([
-            dict.new()
-              |> dict.insert("name", "Knatte")
-              |> dynamic.from,
-            dict.new()
-              |> dict.insert("name", "Fnatte")
-              |> dynamic.from,
-            dict.new()
-              |> dict.insert("name", "Tjatte")
-              |> dynamic.from,
-          ])
-          |> dynamic.from,
-      )
-      |> dynamic.from,
-  )
+  engine.run(expected_ast, input_context, string_builder.new())
   |> should.be_ok
   |> should.equal(expected_output)
 }

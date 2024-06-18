@@ -1,160 +1,118 @@
-import gleam/dict
-import gleam/dynamic
-import gleam/list
+import gleam/string_builder
 import gleeunit/should
-import handles/engine
-import handles/parser
+import handles/ctx
+import handles/internal/engine
+import handles/internal/parser
 
 pub fn engine_should_return_correct_when_running_hello_world_test() {
-  engine.run([parser.Constant("Hello World")], Nil |> dynamic.from)
+  [parser.Constant("Hello World")]
+  |> engine.run(ctx.Dict([]), string_builder.new())
   |> should.be_ok
   |> should.equal("Hello World")
 }
 
 pub fn engine_should_return_correct_when_running_hello_name_test() {
-  engine.run(
-    [parser.Constant("Hello "), parser.Property(["name"])],
-    dict.new()
-      |> dict.insert("name", "Oliver")
-      |> dynamic.from,
+  [parser.Constant("Hello "), parser.Property(["name"])]
+  |> engine.run(
+    ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))]),
+    string_builder.new(),
   )
   |> should.be_ok
   |> should.equal("Hello Oliver")
 }
 
 pub fn engine_should_return_correct_when_accessing_nested_property_test() {
-  engine.run(
-    [parser.Property(["foo", "bar"])],
-    dict.new()
-      |> dict.insert(
-        "foo",
-        dict.new()
-          |> dict.insert("bar", 42),
-      )
-      |> dynamic.from,
+  [parser.Property(["foo", "bar"])]
+  |> engine.run(
+    ctx.Dict([ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))]))]),
+    string_builder.new(),
   )
   |> should.be_ok
   |> should.equal("42")
 }
 
 pub fn engine_should_return_correct_when_using_truthy_if_test() {
-  engine.run(
-    [parser.Block("if", ["bool"], [parser.Property(["foo", "bar"])])],
-    dict.new()
-      |> dict.insert(
-        "foo",
-        dict.new()
-          |> dict.insert("bar", 42)
-          |> dynamic.from,
-      )
-      |> dict.insert(
-        "bool",
-        True
-          |> dynamic.from,
-      )
-      |> dynamic.from,
+  [parser.IfBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  |> engine.run(
+    ctx.Dict([
+      ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))])),
+      ctx.Prop("bool", ctx.Bool(True)),
+    ]),
+    string_builder.new(),
   )
   |> should.be_ok
   |> should.equal("42")
 }
 
 pub fn engine_should_return_correct_when_using_falsy_if_test() {
-  engine.run(
-    [parser.Block("if", ["bool"], [parser.Property(["foo", "bar"])])],
-    dict.new()
-      |> dict.insert(
-        "bool",
-        False
-          |> dynamic.from,
-      )
-      |> dynamic.from,
+  [parser.IfBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  |> engine.run(
+    ctx.Dict([ctx.Prop("bool", ctx.Bool(False))]),
+    string_builder.new(),
   )
   |> should.be_ok
   |> should.equal("")
 }
 
 pub fn engine_should_return_correct_when_using_truthy_unless_test() {
-  engine.run(
-    [parser.Block("unless", ["bool"], [parser.Property(["foo", "bar"])])],
-    dict.new()
-      |> dict.insert(
-        "bool",
-        True
-          |> dynamic.from,
-      )
-      |> dynamic.from,
+  [parser.UnlessBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  |> engine.run(
+    ctx.Dict([ctx.Prop("bool", ctx.Bool(True))]),
+    string_builder.new(),
   )
   |> should.be_ok
   |> should.equal("")
 }
 
 pub fn engine_should_return_correct_when_using_falsy_unless_test() {
-  engine.run(
-    [parser.Block("unless", ["bool"], [parser.Property(["foo", "bar"])])],
-    dict.new()
-      |> dict.insert(
-        "foo",
-        dict.new()
-          |> dict.insert("bar", 42)
-          |> dynamic.from,
-      )
-      |> dict.insert(
-        "bool",
-        False
-          |> dynamic.from,
-      )
-      |> dynamic.from,
+  [parser.UnlessBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  |> engine.run(
+    ctx.Dict([
+      ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))])),
+      ctx.Prop("bool", ctx.Bool(False)),
+    ]),
+    string_builder.new(),
   )
   |> should.be_ok
   |> should.equal("42")
 }
 
 pub fn engine_should_return_correct_when_using_each_test() {
-  engine.run(
-    [
-      parser.Block("each", ["list"], [
-        parser.Property(["name"]),
-        parser.Constant(", "),
-      ]),
-    ],
-    dict.new()
-      |> dict.insert(
+  [
+    parser.Constant("They are "),
+    parser.EachBlock(["list"], [
+      parser.Property(["name"]),
+      parser.Constant(", "),
+    ]),
+    parser.Constant("and Kalle"),
+  ]
+  |> engine.run(
+    ctx.Dict([
+      ctx.Prop(
         "list",
-        list.new()
-          |> list.append([
-            dict.new()
-              |> dict.insert("name", "Knatte")
-              |> dynamic.from,
-            dict.new()
-              |> dict.insert("name", "Fnatte")
-              |> dynamic.from,
-            dict.new()
-              |> dict.insert("name", "Tjatte")
-              |> dynamic.from,
-          ])
-          |> dynamic.from,
-      )
-      |> dynamic.from,
+        ctx.List([
+          ctx.Dict([ctx.Prop("name", ctx.Str("Knatte"))]),
+          ctx.Dict([ctx.Prop("name", ctx.Str("Fnatte"))]),
+          ctx.Dict([ctx.Prop("name", ctx.Str("Tjatte"))]),
+        ]),
+      ),
+    ]),
+    string_builder.new(),
   )
   |> should.be_ok
-  |> should.equal("Knatte, Fnatte, Tjatte, ")
+  |> should.equal("They are Knatte, Fnatte, Tjatte, and Kalle")
 }
 
 pub fn engine_should_return_correct_when_using_empty_each_test() {
-  engine.run(
-    [
-      parser.Block("each", ["list"], [
-        parser.Property(["name"]),
-        parser.Constant(", "),
-      ]),
-    ],
-    dict.new()
-      |> dict.insert(
-        "list",
-        list.new()
-          |> dynamic.from,
-      )
-      |> dynamic.from,
+  [
+    parser.EachBlock(["list"], [
+      parser.Property(["name"]),
+      parser.Constant(", "),
+    ]),
+  ]
+  |> engine.run(
+    ctx.Dict([ctx.Prop("list", ctx.List([]))]),
+    string_builder.new(),
   )
   |> should.be_ok
   |> should.equal("")
