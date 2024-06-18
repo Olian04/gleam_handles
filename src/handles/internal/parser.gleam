@@ -18,21 +18,21 @@ pub fn run(tokens: List(tokenizer.Token), ast: List(AST)) -> List(AST) {
         tokenizer.Property(path) -> run(tail, [Property(path), ..ast])
         tokenizer.IfBlockStart(path) -> {
           let children = run(tail, [])
-          run(list.drop(tail, list.length(children)), [
+          run(list.drop(tail, list.length(children) + 1), [
             IfBlock(path, children),
             ..ast
           ])
         }
         tokenizer.UnlessBlockStart(path) -> {
           let children = run(tail, [])
-          run(list.drop(tail, list.length(children)), [
+          run(list.drop(tail, list.length(children) + 1), [
             UnlessBlock(path, children),
             ..ast
           ])
         }
         tokenizer.EachBlockStart(path) -> {
           let children = run(tail, [])
-          run(list.drop(tail, list.length(children)), [
+          run(list.drop(tail, list.length(children) + 1), [
             EachBlock(path, children),
             ..ast
           ])
