@@ -10,19 +10,16 @@ gleam add handles
 ```
 
 ```gleam
-import handles
 import gleam/io
-import gleam/dict
-import gleam/dynamic
+import handles
+import handles/ctx
 
 pub fn main() {
   let assert Ok(template) = handles.prepare("Hello {{name}}")
   let assert Ok(string) =
     handles.run(
       template,
-      dict.new()
-        |> dict.insert("name", "Oliver")
-        |> dynamic.from,
+      [ctx.Prop("name", ctx.Str("Oliver"))]
     )
 
   io.println(string)
