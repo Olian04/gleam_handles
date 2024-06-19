@@ -13,7 +13,7 @@ pub fn one_tag_test() {
   "{{foo}}"
   |> tokenizer.run(0, [])
   |> should.be_ok
-  |> should.equal([tokenizer.Property(["foo"])])
+  |> should.equal([tokenizer.Property(2, ["foo"])])
 }
 
 pub fn two_tags_test() {
@@ -21,9 +21,9 @@ pub fn two_tags_test() {
   |> tokenizer.run(0, [])
   |> should.be_ok
   |> should.equal([
-    tokenizer.Property(["foo"]),
-    tokenizer.Constant(" "),
-    tokenizer.Property(["bar"]),
+    tokenizer.Property(2, ["foo"]),
+    tokenizer.Constant(7, " "),
+    tokenizer.Property(10, ["bar"]),
   ])
 }
 
@@ -31,7 +31,7 @@ pub fn self_tag_test() {
   "{{.}}"
   |> tokenizer.run(0, [])
   |> should.be_ok
-  |> should.equal([tokenizer.Property([])])
+  |> should.equal([tokenizer.Property(2, [])])
 }
 
 pub fn unexpected_token_test() {

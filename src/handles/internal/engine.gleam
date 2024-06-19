@@ -41,17 +41,17 @@ pub fn run(
     [] -> builder |> string_builder.to_string |> Ok
     [node, ..rest] ->
       case node {
-        parser.Constant(value) -> Ok(value)
-        parser.Property(path) -> ctx_utils.get_property(path, ctx)
-        parser.IfBlock(path, children) ->
-          ctx_utils.get_bool(path, ctx)
+        parser.Constant(_, value) -> Ok(value)
+        parser.Property(index, path) -> ctx_utils.get_property(index, path, ctx)
+        parser.IfBlock(index, path, children) ->
+          ctx_utils.get_bool(index, path, ctx)
           |> result.try(run_if(_, children, ctx))
-        parser.UnlessBlock(path, children) ->
-          ctx_utils.get_bool(path, ctx)
+        parser.UnlessBlock(index, path, children) ->
+          ctx_utils.get_bool(index, path, ctx)
           |> result.map(bool.negate)
           |> result.try(run_if(_, children, ctx))
-        parser.EachBlock(path, children) ->
-          ctx_utils.get_list(path, ctx)
+        parser.EachBlock(index, path, children) ->
+          ctx_utils.get_list(index, path, ctx)
           |> result.try(run_each(_, children, string_builder.new()))
       }
       |> result.try(fn(it) {

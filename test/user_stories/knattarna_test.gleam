@@ -23,17 +23,19 @@ const input_context = ctx.Dict(
 )
 
 const expected_tokens = [
-  tokenizer.Constant("They are "), tokenizer.EachBlockStart(["knattarna"]),
-  tokenizer.Property(["name"]), tokenizer.Constant(", "), tokenizer.EachBlockEnd,
-  tokenizer.Constant("and Kalle"),
+  tokenizer.Constant(0, "They are "),
+  tokenizer.EachBlockStart(11, ["knattarna"]), tokenizer.Property(30, ["name"]),
+  tokenizer.Constant(36, ", "), tokenizer.EachBlockEnd(40),
+  tokenizer.Constant(47, "and Kalle"),
 ]
 
 const expected_ast = [
-  parser.Constant("They are "),
+  parser.Constant(0, "They are "),
   parser.EachBlock(
+    11,
     ["knattarna"],
-    [parser.Property(["name"]), parser.Constant(", ")],
-  ), parser.Constant("and Kalle"),
+    [parser.Property(30, ["name"]), parser.Constant(36, ", ")],
+  ), parser.Constant(47, "and Kalle"),
 ]
 
 const expected_output = "They are Knatte, Fnatte, Tjatte, and Kalle"

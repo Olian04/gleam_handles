@@ -9,37 +9,37 @@ pub fn no_tokens_test() {
 }
 
 pub fn one_constant_test() {
-  [tokenizer.Constant("Hello World")]
+  [tokenizer.Constant(0, "Hello World")]
   |> parser.run([])
-  |> should.equal([parser.Constant("Hello World")])
+  |> should.equal([parser.Constant(0, "Hello World")])
 }
 
 pub fn one_property_test() {
-  [tokenizer.Property(["foo", "bar"])]
+  [tokenizer.Property(0, ["foo", "bar"])]
   |> parser.run([])
-  |> should.equal([parser.Property(["foo", "bar"])])
+  |> should.equal([parser.Property(0, ["foo", "bar"])])
 }
 
 pub fn self_tag_test() {
-  [tokenizer.Property([])]
+  [tokenizer.Property(0, [])]
   |> parser.run([])
-  |> should.equal([parser.Property([])])
+  |> should.equal([parser.Property(0, [])])
 }
 
 pub fn one_ifblock_test() {
-  [tokenizer.IfBlockStart(["bar", "biz"]), tokenizer.IfBlockEnd]
+  [tokenizer.IfBlockStart(0, ["bar", "biz"]), tokenizer.IfBlockEnd(0)]
   |> parser.run([])
-  |> should.equal([parser.IfBlock(["bar", "biz"], [])])
+  |> should.equal([parser.IfBlock(0, ["bar", "biz"], [])])
 }
 
 pub fn one_unlessblock_test() {
-  [tokenizer.UnlessBlockStart(["bar", "biz"]), tokenizer.UnlessBlockEnd]
+  [tokenizer.UnlessBlockStart(0, ["bar", "biz"]), tokenizer.UnlessBlockEnd(0)]
   |> parser.run([])
-  |> should.equal([parser.UnlessBlock(["bar", "biz"], [])])
+  |> should.equal([parser.UnlessBlock(0, ["bar", "biz"], [])])
 }
 
 pub fn one_eachblock_test() {
-  [tokenizer.EachBlockStart(["bar", "biz"]), tokenizer.EachBlockEnd]
+  [tokenizer.EachBlockStart(0, ["bar", "biz"]), tokenizer.EachBlockEnd(0)]
   |> parser.run([])
-  |> should.equal([parser.EachBlock(["bar", "biz"], [])])
+  |> should.equal([parser.EachBlock(0, ["bar", "biz"], [])])
 }

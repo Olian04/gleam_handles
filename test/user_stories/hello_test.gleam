@@ -10,12 +10,13 @@ const input_template = "Hello {{name}}!"
 const input_context = ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))])
 
 const expected_tokens = [
-  tokenizer.Constant("Hello "), tokenizer.Property(["name"]),
-  tokenizer.Constant("!"),
+  tokenizer.Constant(0, "Hello "), tokenizer.Property(8, ["name"]),
+  tokenizer.Constant(14, "!"),
 ]
 
 const expected_ast = [
-  parser.Constant("Hello "), parser.Property(["name"]), parser.Constant("!"),
+  parser.Constant(0, "Hello "), parser.Property(8, ["name"]),
+  parser.Constant(14, "!"),
 ]
 
 const expected_output = "Hello Oliver!"

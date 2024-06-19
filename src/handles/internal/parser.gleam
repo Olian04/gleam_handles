@@ -2,11 +2,11 @@ import gleam/list
 import handles/internal/tokenizer
 
 pub type AST {
-  Constant(value: String)
-  Property(path: List(String))
-  IfBlock(path: List(String), children: List(AST))
-  UnlessBlock(path: List(String), children: List(AST))
-  EachBlock(path: List(String), children: List(AST))
+  Constant(index: Int, value: String)
+  Property(index: Int, path: List(String))
+  IfBlock(index: Int, path: List(String), children: List(AST))
+  UnlessBlock(index: Int, path: List(String), children: List(AST))
+  EachBlock(index: Int, path: List(String), children: List(AST))
 }
 
 pub fn run(tokens: List(tokenizer.Token), ast: List(AST)) -> List(AST) {
@@ -14,32 +14,34 @@ pub fn run(tokens: List(tokenizer.Token), ast: List(AST)) -> List(AST) {
     [] -> list.reverse(ast)
     [head, ..tail] -> {
       case head {
-        tokenizer.Constant(value) -> run(tail, [Constant(value), ..ast])
-        tokenizer.Property(path) -> run(tail, [Property(path), ..ast])
-        tokenizer.IfBlockStart(path) -> {
+        tokenizer.Constant(index, value) ->
+          run(tail, [Constant(index, value), ..ast])
+        tokenizer.Property(index, path) ->
+          run(tail, [Property(index, path), ..ast])
+        tokenizer.IfBlockStart(index, path) -> {
           let children = run(tail, [])
           run(list.drop(tail, list.length(children) + 1), [
-            IfBlock(path, children),
+            IfBlock(index, path, children),
             ..ast
           ])
         }
-        tokenizer.UnlessBlockStart(path) -> {
+        tokenizer.UnlessBlockStart(index, path) -> {
           let children = run(tail, [])
           run(list.drop(tail, list.length(children) + 1), [
-            UnlessBlock(path, children),
+            UnlessBlock(index, path, children),
             ..ast
           ])
         }
-        tokenizer.EachBlockStart(path) -> {
+        tokenizer.EachBlockStart(index, path) -> {
           let children = run(tail, [])
           run(list.drop(tail, list.length(children) + 1), [
-            EachBlock(path, children),
+            EachBlock(index, path, children),
             ..ast
           ])
         }
-        tokenizer.IfBlockEnd -> list.reverse(ast)
-        tokenizer.UnlessBlockEnd -> list.reverse(ast)
-        tokenizer.EachBlockEnd -> list.reverse(ast)
+        tokenizer.IfBlockEnd(_) -> list.reverse(ast)
+        tokenizer.UnlessBlockEnd(_) -> list.reverse(ast)
+        tokenizer.EachBlockEnd(_) -> list.reverse(ast)
       }
     }
   }

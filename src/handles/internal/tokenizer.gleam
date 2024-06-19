@@ -3,14 +3,14 @@ import gleam/string
 import handles/error
 
 pub type Token {
-  Constant(value: String)
-  Property(path: List(String))
-  IfBlockStart(path: List(String))
-  IfBlockEnd
-  UnlessBlockStart(path: List(String))
-  UnlessBlockEnd
-  EachBlockStart(path: List(String))
-  EachBlockEnd
+  Constant(index: Int, value: String)
+  Property(index: Int, path: List(String))
+  IfBlockStart(index: Int, path: List(String))
+  IfBlockEnd(index: Int)
+  UnlessBlockStart(index: Int, path: List(String))
+  UnlessBlockEnd(index: Int)
+  EachBlockStart(index: Int, path: List(String))
+  EachBlockEnd(index: Int)
 }
 
 pub fn run(
@@ -21,7 +21,8 @@ pub fn run(
   case input {
     "{{/if" <> rest ->
       case rest |> string.split_once("}}") {
-        Ok(#("", rest)) -> run(rest, index + 7, [IfBlockEnd, ..tokens])
+        Ok(#("", rest)) ->
+          run(rest, index + 7, [IfBlockEnd(index + 2), ..tokens])
         _ -> Error(error.UnexpectedBlockArgument(index + 2))
       }
     "{{#if" <> rest ->
@@ -31,7 +32,7 @@ pub fn run(
             [""] -> Error(error.MissingBlockArgument(index + 2))
             path ->
               run(rest, index + 7 + string.length(arg), [
-                IfBlockStart(path),
+                IfBlockStart(index + 2, path),
                 ..tokens
               ])
           }
@@ -40,7 +41,8 @@ pub fn run(
 
     "{{/unless" <> rest ->
       case rest |> string.split_once("}}") {
-        Ok(#("", rest)) -> run(rest, index + 11, [UnlessBlockEnd, ..tokens])
+        Ok(#("", rest)) ->
+          run(rest, index + 11, [UnlessBlockEnd(index + 2), ..tokens])
         _ -> Error(error.UnexpectedBlockArgument(index + 2))
       }
     "{{#unless" <> rest ->
@@ -50,7 +52,7 @@ pub fn run(
             [""] -> Error(error.MissingBlockArgument(index + 2))
             path ->
               run(rest, index + 11 + string.length(arg), [
-                UnlessBlockStart(path),
+                UnlessBlockStart(index + 2, path),
                 ..tokens
               ])
           }
@@ -59,7 +61,8 @@ pub fn run(
 
     "{{/each" <> rest ->
       case rest |> string.split_once("}}") {
-        Ok(#("", rest)) -> run(rest, index + 9, [EachBlockEnd, ..tokens])
+        Ok(#("", rest)) ->
+          run(rest, index + 9, [EachBlockEnd(index + 2), ..tokens])
         _ -> Error(error.UnexpectedBlockArgument(index + 2))
       }
     "{{#each" <> rest ->
@@ -69,7 +72,7 @@ pub fn run(
             [""] -> Error(error.MissingBlockArgument(index + 2))
             path ->
               run(rest, index + 9 + string.length(arg), [
-                EachBlockStart(path),
+                EachBlockStart(index + 2, path),
                 ..tokens
               ])
           }
@@ -87,12 +90,12 @@ pub fn run(
             [""] -> Error(error.MissingPropertyPath(index + 2))
             ["", ""] ->
               run(rest, index + 4 + string.length(body), [
-                Property([]),
+                Property(index + 2, []),
                 ..tokens
               ])
             path ->
               run(rest, index + 4 + string.length(body), [
-                Property(path),
+                Property(index + 2, path),
                 ..tokens
               ])
           }
@@ -103,13 +106,13 @@ pub fn run(
       case input |> string.split_once("{{") {
         Ok(#(str, rest)) ->
           run("{{" <> rest, index + string.length(str), [
-            Constant(str),
+            Constant(index, str),
             ..tokens
           ])
         _ ->
           case input {
             "" -> Ok(list.reverse(tokens))
-            str -> Ok(list.reverse([Constant(str), ..tokens]))
+            str -> Ok(list.reverse([Constant(index, str), ..tokens]))
           }
       }
   }

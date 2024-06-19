@@ -38,7 +38,7 @@ fn resolve_position(
   }
 }
 
-pub fn transform_error(template: String, offset: Int, message: String) {
+fn transform_error(template: String, offset: Int, message: String) {
   case resolve_position(template, offset, Position(0, 0, 0)) {
     Position(_, row, col) ->
       Ok(
@@ -72,5 +72,30 @@ pub fn format_tokenizer_error(
       transform_error(template, index, "Tag is missing property path")
     error.UnexpectedBlockKind(index) ->
       transform_error(template, index, "Tag is of unknown block kind")
+  }
+}
+
+pub fn format_runtime_error(
+  error: error.RuntimeError,
+  template: String,
+) -> Result(String, Nil) {
+  case error {
+    error.UnexpectedTypeError(index, path, got, expected) ->
+      transform_error(
+        template,
+        index,
+        "Unexpected type of property "
+          <> string.join(path, ".")
+          <> ", extepced "
+          <> string.join(expected, " or ")
+          <> " but found found "
+          <> got,
+      )
+    error.UnknownPropertyError(index, path) ->
+      transform_error(
+        template,
+        index,
+        "Unable to resolve property " <> string.join(path, "."),
+      )
   }
 }

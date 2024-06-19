@@ -5,14 +5,14 @@ import handles/internal/engine
 import handles/internal/parser
 
 pub fn hello_world_test() {
-  [parser.Constant("Hello World")]
+  [parser.Constant(0, "Hello World")]
   |> engine.run(ctx.Dict([]), string_builder.new())
   |> should.be_ok
   |> should.equal("Hello World")
 }
 
 pub fn hello_name_test() {
-  [parser.Constant("Hello "), parser.Property(["name"])]
+  [parser.Constant(0, "Hello "), parser.Property(0, ["name"])]
   |> engine.run(
     ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))]),
     string_builder.new(),
@@ -22,14 +22,14 @@ pub fn hello_name_test() {
 }
 
 pub fn self_tag_test() {
-  [parser.Property([])]
+  [parser.Property(0, [])]
   |> engine.run(ctx.Str("Hello"), string_builder.new())
   |> should.be_ok
   |> should.equal("Hello")
 }
 
 pub fn nested_property_test() {
-  [parser.Property(["foo", "bar"])]
+  [parser.Property(0, ["foo", "bar"])]
   |> engine.run(
     ctx.Dict([ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))]))]),
     string_builder.new(),
@@ -39,7 +39,7 @@ pub fn nested_property_test() {
 }
 
 pub fn truthy_if_test() {
-  [parser.IfBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  [parser.IfBlock(0, ["bool"], [parser.Property(0, ["foo", "bar"])])]
   |> engine.run(
     ctx.Dict([
       ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))])),
@@ -52,7 +52,7 @@ pub fn truthy_if_test() {
 }
 
 pub fn falsy_if_test() {
-  [parser.IfBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  [parser.IfBlock(0, ["bool"], [parser.Property(0, ["foo", "bar"])])]
   |> engine.run(
     ctx.Dict([ctx.Prop("bool", ctx.Bool(False))]),
     string_builder.new(),
@@ -62,7 +62,7 @@ pub fn falsy_if_test() {
 }
 
 pub fn truthy_unless_test() {
-  [parser.UnlessBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  [parser.UnlessBlock(0, ["bool"], [parser.Property(0, ["foo", "bar"])])]
   |> engine.run(
     ctx.Dict([ctx.Prop("bool", ctx.Bool(True))]),
     string_builder.new(),
@@ -72,7 +72,7 @@ pub fn truthy_unless_test() {
 }
 
 pub fn falsy_unless_test() {
-  [parser.UnlessBlock(["bool"], [parser.Property(["foo", "bar"])])]
+  [parser.UnlessBlock(0, ["bool"], [parser.Property(0, ["foo", "bar"])])]
   |> engine.run(
     ctx.Dict([
       ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))])),
@@ -86,12 +86,12 @@ pub fn falsy_unless_test() {
 
 pub fn each_test() {
   [
-    parser.Constant("They are "),
-    parser.EachBlock(["list"], [
-      parser.Property(["name"]),
-      parser.Constant(", "),
+    parser.Constant(0, "They are "),
+    parser.EachBlock(0, ["list"], [
+      parser.Property(0, ["name"]),
+      parser.Constant(0, ", "),
     ]),
-    parser.Constant("and Kalle"),
+    parser.Constant(0, "and Kalle"),
   ]
   |> engine.run(
     ctx.Dict([
@@ -112,9 +112,9 @@ pub fn each_test() {
 
 pub fn empty_each_test() {
   [
-    parser.EachBlock(["list"], [
-      parser.Property(["name"]),
-      parser.Constant(", "),
+    parser.EachBlock(0, ["list"], [
+      parser.Property(0, ["name"]),
+      parser.Constant(0, ", "),
     ]),
   ]
   |> engine.run(

@@ -7,6 +7,11 @@ pub type TokenizerError {
 }
 
 pub type RuntimeError {
-  UnexpectedTypeError(path: List(String), got: String, expected: List(String))
-  UnknownPropertyError(key: List(String))
+  UnexpectedTypeError(
+    index: Int,
+    path: List(String),
+    got: String,
+    expected: List(String),
+  )
+  UnknownPropertyError(index: Int, path: List(String))
 }

@@ -46,14 +46,16 @@ const input_context = ctx.Dict(
 )
 
 const expected_tokens = [
-  tokenizer.EachBlockStart(["outer"]), tokenizer.EachBlockStart(["inner"]),
-  tokenizer.Property(["value"]), tokenizer.EachBlockEnd, tokenizer.EachBlockEnd,
+  tokenizer.EachBlockStart(2, ["outer"]),
+  tokenizer.EachBlockStart(17, ["inner"]), tokenizer.Property(32, ["value"]),
+  tokenizer.EachBlockEnd(41), tokenizer.EachBlockEnd(50),
 ]
 
 const expected_ast = [
   parser.EachBlock(
+    2,
     ["outer"],
-    [parser.EachBlock(["inner"], [parser.Property(["value"])])],
+    [parser.EachBlock(17, ["inner"], [parser.Property(32, ["value"])])],
   ),
 ]
 
