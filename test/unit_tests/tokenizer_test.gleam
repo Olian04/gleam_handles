@@ -27,6 +27,13 @@ pub fn two_tags_test() {
   ])
 }
 
+pub fn self_tag_test() {
+  "{{.}}"
+  |> tokenizer.run(0, [])
+  |> should.be_ok
+  |> should.equal([tokenizer.Property([])])
+}
+
 pub fn unexpected_token_test() {
   "{{foo}d"
   |> tokenizer.run(0, [])

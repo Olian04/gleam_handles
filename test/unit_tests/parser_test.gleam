@@ -20,6 +20,12 @@ pub fn one_property_test() {
   |> should.equal([parser.Property(["foo", "bar"])])
 }
 
+pub fn self_tag_test() {
+  [tokenizer.Property([])]
+  |> parser.run([])
+  |> should.equal([parser.Property([])])
+}
+
 pub fn one_ifblock_test() {
   [tokenizer.IfBlockStart(["bar", "biz"]), tokenizer.IfBlockEnd]
   |> parser.run([])

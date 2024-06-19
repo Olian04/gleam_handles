@@ -85,6 +85,11 @@ pub fn run(
         Ok(#(body, rest)) ->
           case body |> string.trim |> string.split(".") {
             [""] -> Error(error.MissingPropertyPath(index + 2))
+            ["", ""] ->
+              run(rest, index + 4 + string.length(body), [
+                Property([]),
+                ..tokens
+              ])
             path ->
               run(rest, index + 4 + string.length(body), [
                 Property(path),

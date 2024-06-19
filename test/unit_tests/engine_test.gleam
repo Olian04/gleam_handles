@@ -21,6 +21,13 @@ pub fn hello_name_test() {
   |> should.equal("Hello Oliver")
 }
 
+pub fn self_tag_test() {
+  [parser.Property([])]
+  |> engine.run(ctx.Str("Hello"), string_builder.new())
+  |> should.be_ok
+  |> should.equal("Hello")
+}
+
 pub fn nested_property_test() {
   [parser.Property(["foo", "bar"])]
   |> engine.run(
