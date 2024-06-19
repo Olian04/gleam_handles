@@ -17,12 +17,9 @@ import handles/ctx
 pub fn main() {
   let assert Ok(template) = handles.prepare("Hello {{name}}")
   let assert Ok(string) =
-    handles.run(
-      template,
-      [ctx.Prop("name", ctx.Str("Oliver"))]
-    )
+    handles.run(template, ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))]))
 
-  io.println(string)
+  io.debug(string)
 }
 ```
 
@@ -38,8 +35,16 @@ A property tag is used to access properties passed into the template engine and 
 Values accessed by a property tag must be of type `String`, `Int`, or `Float`, or it will result in a runtime error.
 Accessing a property which was not passed into the template engine will result in a runtime error.
 
+A property tag can refer to a nested property with `.` separating keys in nested dicts.
+
 ```handlebars
 {{some.property.path}}
+```
+
+A property can also refer to the current context element by passing a single `.`.
+
+```handlebars
+{{.}}
 ```
 
 ### Block tags

@@ -20,8 +20,8 @@ pub fn prepare(template: String) -> Result(Template, error.TokenizerError) {
 
 pub fn run(
   template: Template,
-  root_ctx: List(ctx.Prop),
+  ctx: ctx.Value,
 ) -> Result(String, error.RuntimeError) {
   let Template(ast) = template
-  engine.run(ast, ctx.Dict(root_ctx), string_builder.new())
+  engine.run(ast, ctx, string_builder.new())
 }
