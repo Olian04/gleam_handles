@@ -6,7 +6,7 @@ import handles/internal/engine
 import handles/internal/parser
 import handles/internal/tokenizer
 
-pub type Template {
+pub opaque type Template {
   Template(ast: List(parser.AST))
 }
 
