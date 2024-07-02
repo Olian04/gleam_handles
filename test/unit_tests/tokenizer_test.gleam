@@ -106,19 +106,39 @@ pub fn missing_block_argument_test() {
   "{{#if}}"
   |> tokenizer.run(0, [])
   |> should.be_error
-  |> should.equal(error.MissingBlockArgument(2))
+  |> should.equal(error.MissingArgument(2))
 }
 
 pub fn end_block_with_arguments_test() {
   "{{/if bar}}"
   |> tokenizer.run(0, [])
   |> should.be_error
-  |> should.equal(error.UnexpectedBlockArgument(2))
+  |> should.equal(error.UnexpectedArgument(2))
 }
 
 pub fn empty_expression_test() {
   "{{}}"
   |> tokenizer.run(0, [])
   |> should.be_error
-  |> should.equal(error.MissingPropertyPath(2))
+  |> should.equal(error.MissingArgument(2))
+}
+
+pub fn whitespace_test() {
+  "{{                  .             }}"
+  |> tokenizer.run(0, [])
+  |> should.be_ok
+  |> should.equal([tokenizer.Property(2, [])])
+
+  "{{#             if      prop          }}{{/            if           }}"
+  |> tokenizer.run(0, [])
+  |> should.be_ok
+  |> should.equal([
+    tokenizer.IfBlockStart(2, ["prop"]),
+    tokenizer.IfBlockEnd(42),
+  ])
+
+  "{{>             template      prop          }}"
+  |> tokenizer.run(0, [])
+  |> should.be_ok
+  |> should.equal([tokenizer.Partial(2, "template", ["prop"])])
 }

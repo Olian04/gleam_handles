@@ -14,6 +14,18 @@ pub type Token {
   EachBlockEnd(index: Int)
 }
 
+fn split_body(body: String) -> List(String) {
+  body
+  |> string.trim
+  |> string.split(" ")
+  |> list.filter(fn(it) {
+    it
+    |> string.trim
+    |> string.length
+    > 0
+  })
+}
+
 pub fn run(
   input: String,
   index: Int,
@@ -23,125 +35,127 @@ pub fn run(
     "{{>" <> rest ->
       case rest |> string.split_once("}}") {
         Ok(#(body, rest)) ->
-          case body |> string.trim |> string.split(" ") {
-            [""] -> Error(error.MissingPartialId(index + 2))
+          case split_body(body) {
+            [] -> Error(error.MissingPartialId(index + 2))
             [id, arg] ->
               case arg |> string.trim |> string.split(".") {
-                [""] -> Error(error.MissingPartialArgument(index + 2))
-                ["", ""] ->
-                  // {{>id .}}
-                  run(rest, index + 7 + string.length(arg), [
-                    Partial(index + 2, id, []),
-                    ..tokens
-                  ])
-                path ->
-                  run(rest, index + 7 + string.length(arg), [
-                    Partial(index + 2, id, path),
-                    ..tokens
-                  ])
+                [""] -> Error(error.MissingArgument(index + 2))
+                path -> {
+                  let path = case path {
+                    ["", ""] -> []
+                    path -> path
+                  }
+
+                  run(
+                    rest,
+                    index + string.length("{{>}}") + string.length(body),
+                    [Partial(index + 2, id, path), ..tokens],
+                  )
+                }
               }
-            _ -> Error(error.UnexpectedMultiplePartialArguments(index + 2))
+            _ -> Error(error.UnexpectedMultipleArguments(index + 2))
           }
         Error(_) -> Error(error.UnbalancedTag(index + 2))
       }
 
-    "{{/if" <> rest ->
+    "{{#" <> rest ->
       case rest |> string.split_once("}}") {
-        Ok(#("", rest)) ->
-          run(rest, index + 7, [IfBlockEnd(index + 2), ..tokens])
-        _ -> Error(error.UnexpectedBlockArgument(index + 2))
-      }
-    "{{#if" <> rest ->
-      case rest |> string.split_once("}}") {
-        Ok(#(arg, rest)) ->
-          case arg |> string.trim |> string.split(".") {
-            [""] -> Error(error.MissingBlockArgument(index + 2))
-            ["", ""] ->
-              // {{#if .}}
-              run(rest, index + 7 + string.length(arg), [
-                IfBlockStart(index + 2, []),
-                ..tokens
-              ])
-            path ->
-              run(rest, index + 7 + string.length(arg), [
-                IfBlockStart(index + 2, path),
-                ..tokens
-              ])
+        Ok(#(body, rest)) ->
+          case split_body(body) {
+            [] -> Error(error.MissingBlockKind(index + 2))
+            [_] -> Error(error.MissingArgument(index + 2))
+            [kind, arg] ->
+              case arg |> string.trim |> string.split(".") {
+                [""] -> Error(error.MissingArgument(index + 2))
+                path -> {
+                  let path = case path {
+                    ["", ""] -> []
+                    path -> path
+                  }
+
+                  case kind {
+                    "if" ->
+                      run(
+                        rest,
+                        index + string.length("{{#}}") + string.length(body),
+                        [IfBlockStart(index + 2, path), ..tokens],
+                      )
+                    "unless" ->
+                      run(
+                        rest,
+                        index + string.length("{{#}}") + string.length(body),
+                        [UnlessBlockStart(index + 2, path), ..tokens],
+                      )
+                    "each" ->
+                      run(
+                        rest,
+                        index + string.length("{{#}}") + string.length(body),
+                        [EachBlockStart(index + 2, path), ..tokens],
+                      )
+                    _ -> Error(error.UnexpectedBlockKind(index))
+                  }
+                }
+              }
+            _ -> Error(error.UnexpectedMultipleArguments(index + 2))
           }
-        Error(_) -> Error(error.UnbalancedTag(index + 2))
+        _ -> Error(error.UnbalancedTag(index + 2))
       }
 
-    "{{/unless" <> rest ->
+    "{{/" <> rest ->
       case rest |> string.split_once("}}") {
-        Ok(#("", rest)) ->
-          run(rest, index + 11, [UnlessBlockEnd(index + 2), ..tokens])
-        _ -> Error(error.UnexpectedBlockArgument(index + 2))
-      }
-    "{{#unless" <> rest ->
-      case rest |> string.split_once("}}") {
-        Ok(#(arg, rest)) ->
-          case arg |> string.trim |> string.split(".") {
-            [""] -> Error(error.MissingBlockArgument(index + 2))
-            ["", ""] ->
-              // {{#unless .}}
-              run(rest, index + 11 + string.length(arg), [
-                UnlessBlockStart(index + 2, []),
-                ..tokens
-              ])
-            path ->
-              run(rest, index + 11 + string.length(arg), [
-                UnlessBlockStart(index + 2, path),
-                ..tokens
-              ])
+        Ok(#(body, rest)) ->
+          case split_body(body) {
+            [] -> Error(error.MissingBlockKind(index + 2))
+            [_, _] -> Error(error.UnexpectedArgument(index + 2))
+            [kind] ->
+              case kind {
+                "if" ->
+                  run(
+                    rest,
+                    index + string.length("{{/}}") + string.length(body),
+                    [IfBlockEnd(index + 2), ..tokens],
+                  )
+                "unless" ->
+                  run(
+                    rest,
+                    index + string.length("{{/}}") + string.length(body),
+                    [UnlessBlockEnd(index + 2), ..tokens],
+                  )
+                "each" ->
+                  run(
+                    rest,
+                    index + string.length("{{/}}") + string.length(body),
+                    [EachBlockEnd(index + 2), ..tokens],
+                  )
+                _ -> Error(error.UnexpectedBlockKind(index))
+              }
+            _ -> Error(error.UnexpectedArgument(index + 2))
           }
-        Error(_) -> Error(error.UnbalancedTag(index + 2))
+        _ -> Error(error.UnbalancedTag(index + 2))
       }
-
-    "{{/each" <> rest ->
-      case rest |> string.split_once("}}") {
-        Ok(#("", rest)) ->
-          run(rest, index + 9, [EachBlockEnd(index + 2), ..tokens])
-        _ -> Error(error.UnexpectedBlockArgument(index + 2))
-      }
-    "{{#each" <> rest ->
-      case rest |> string.split_once("}}") {
-        Ok(#(arg, rest)) ->
-          case arg |> string.trim |> string.split(".") {
-            [""] -> Error(error.MissingBlockArgument(index + 2))
-            ["", ""] ->
-              // {{#each .}}
-              run(rest, index + 9 + string.length(arg), [
-                EachBlockStart(index + 2, []),
-                ..tokens
-              ])
-            path ->
-              run(rest, index + 9 + string.length(arg), [
-                EachBlockStart(index + 2, path),
-                ..tokens
-              ])
-          }
-
-        Error(_) -> Error(error.UnbalancedTag(index + 2))
-      }
-
-    "{{/" <> _ -> Error(error.UnexpectedBlockKind(index + 2))
-    "{{#" <> _ -> Error(error.UnexpectedBlockKind(index + 2))
 
     "{{" <> rest ->
       case rest |> string.split_once("}}") {
         Ok(#(body, rest)) ->
-          case body |> string.trim |> string.split(".") {
-            [""] -> Error(error.MissingPropertyPath(index + 2))
-            ["", ""] ->
-              run(rest, index + 4 + string.length(body), [
-                Property(index + 2, []),
-                ..tokens
-              ])
-            path ->
-              run(rest, index + 4 + string.length(body), [
-                Property(index + 2, path),
-                ..tokens
-              ])
+          case split_body(body) {
+            [] -> Error(error.MissingArgument(index + 2))
+            [arg] ->
+              case arg |> string.split(".") {
+                [""] -> Error(error.MissingArgument(index + 2))
+                path -> {
+                  let path = case path {
+                    ["", ""] -> []
+                    path -> path
+                  }
+
+                  run(
+                    rest,
+                    index + string.length("{{}}") + string.length(body),
+                    [Property(index + 2, path), ..tokens],
+                  )
+                }
+              }
+            _ -> Error(error.UnexpectedMultipleArguments(index + 2))
           }
         Error(_) -> Error(error.UnbalancedTag(index + 2))
       }
