@@ -1,5 +1,5 @@
 name = "handles"
-version = "3.0.0"
+version = "3.0.1"
 
 description = "Handles is a templating language written in pure Gleam. Heavily inspired by Mustache and Handlebars.js"
 licences = ["MIT"]
