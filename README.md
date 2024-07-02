@@ -15,11 +15,11 @@ import handles
 import handles/ctx
 
 pub fn main() {
-  let assert Ok(greet_template) = prepare("Hello {{.}}!")
+  let assert Ok(greet_template) = handles.prepare("Hello {{.}}!")
   let assert Ok(template) =
-    prepare("{{>greet world}}\n{{>greet community}}\n{{>greet you}}")
+    handles.prepare("{{>greet world}}\n{{>greet community}}\n{{>greet you}}")
   let assert Ok(string) =
-    run(
+    handles.run(
       template,
       ctx.Dict([
         ctx.Prop("world", ctx.Str("World")),
