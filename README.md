@@ -27,7 +27,7 @@ pub fn main() {
 
 __Handles__ a is very simple templating language that consists of a single primitive, the "tag".
 A tag starts with two open braces `{{`, followed by a string body, and ends with two closing braces `}}`.
-There are two kinds of tags, [Property tags](#property-tags) and [Block tags](#block-tags).
+There are three kinds of tags, [Property tags](#property-tags), [Block tags](#block-tags), and [Partial tags](#partial-tags).
 
 ### Property tags
 
@@ -80,7 +80,7 @@ Accessing a property which was not passed into the template engine will result i
 #### each
 
 `each` blocks are used to include a part of a templated zero or more times.
-Values accessed by an `each` block must be of type `List(Dict)` or it will result in a runtime error.
+Values accessed by an `each` block must be of type `List` or it will result in a runtime error.
 Accessing a property which was not passed into the template engine will result in a runtime error.
 The context of which properties are resolved while inside the each block will be scoped to the current item from the list.
 
@@ -91,6 +91,16 @@ The context of which properties are resolved while inside the each block will be
 ```
 
 Further documentation can be found at <https://hexdocs.pm/handles>.
+
+### Partial tags
+
+A partial tag is used to include other templates in-place of the partial tag.
+Values accessed by a partial tag can be of any type and will be passed to the partial as the context of which properties are resolved against while inside the partial template.
+Accessing a property which was not passed into the template engine will result in a runtime error.
+
+```handlebars
+{{>some_template some.prop.path}}
+```
 
 ## Development
 
