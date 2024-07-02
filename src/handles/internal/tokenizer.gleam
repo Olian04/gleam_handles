@@ -30,6 +30,12 @@ pub fn run(
         Ok(#(arg, rest)) ->
           case arg |> string.trim |> string.trim |> string.split(".") {
             [""] -> Error(error.MissingBlockArgument(index + 2))
+            ["", ""] ->
+              // {{#if .}}
+              run(rest, index + 7 + string.length(arg), [
+                IfBlockStart(index + 2, []),
+                ..tokens
+              ])
             path ->
               run(rest, index + 7 + string.length(arg), [
                 IfBlockStart(index + 2, path),
@@ -50,6 +56,12 @@ pub fn run(
         Ok(#(arg, rest)) ->
           case arg |> string.trim |> string.split(".") {
             [""] -> Error(error.MissingBlockArgument(index + 2))
+            ["", ""] ->
+              // {{#unless .}}
+              run(rest, index + 11 + string.length(arg), [
+                UnlessBlockStart(index + 2, []),
+                ..tokens
+              ])
             path ->
               run(rest, index + 11 + string.length(arg), [
                 UnlessBlockStart(index + 2, path),
@@ -70,6 +82,12 @@ pub fn run(
         Ok(#(arg, rest)) ->
           case arg |> string.trim |> string.split(".") {
             [""] -> Error(error.MissingBlockArgument(index + 2))
+            ["", ""] ->
+              // {{#each .}}
+              run(rest, index + 9 + string.length(arg), [
+                EachBlockStart(index + 2, []),
+                ..tokens
+              ])
             path ->
               run(rest, index + 9 + string.length(arg), [
                 EachBlockStart(index + 2, path),
