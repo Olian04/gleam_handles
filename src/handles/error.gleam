@@ -2,16 +2,20 @@ pub type TokenizerError {
   UnbalancedTag(index: Int)
   MissingPropertyPath(index: Int)
   MissingBlockArgument(index: Int)
+  MissingPartialId(index: Int)
+  MissingPartialArgument(index: Int)
+  UnexpectedMultiplePartialArguments(index: Int)
   UnexpectedBlockArgument(index: Int)
   UnexpectedBlockKind(index: Int)
 }
 
 pub type RuntimeError {
-  UnexpectedTypeError(
+  UnexpectedType(
     index: Int,
     path: List(String),
     got: String,
     expected: List(String),
   )
-  UnknownPropertyError(index: Int, path: List(String))
+  UnknownProperty(index: Int, path: List(String))
+  UnknownPartial(index: Int, id: String)
 }

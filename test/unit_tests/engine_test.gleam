@@ -1,3 +1,4 @@
+import gleam/dict
 import gleam/string_builder
 import gleeunit/should
 import handles/ctx
@@ -6,7 +7,7 @@ import handles/internal/parser
 
 pub fn hello_world_test() {
   [parser.Constant(0, "Hello World")]
-  |> engine.run(ctx.Dict([]), string_builder.new())
+  |> engine.run(ctx.Dict([]), dict.new(), string_builder.new())
   |> should.be_ok
   |> should.equal("Hello World")
 }
@@ -15,6 +16,7 @@ pub fn hello_name_test() {
   [parser.Constant(0, "Hello "), parser.Property(0, ["name"])]
   |> engine.run(
     ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok
@@ -23,7 +25,7 @@ pub fn hello_name_test() {
 
 pub fn self_tag_test() {
   [parser.Property(0, [])]
-  |> engine.run(ctx.Str("Hello"), string_builder.new())
+  |> engine.run(ctx.Str("Hello"), dict.new(), string_builder.new())
   |> should.be_ok
   |> should.equal("Hello")
 }
@@ -32,6 +34,7 @@ pub fn nested_property_test() {
   [parser.Property(0, ["foo", "bar"])]
   |> engine.run(
     ctx.Dict([ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))]))]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok
@@ -45,6 +48,7 @@ pub fn truthy_if_test() {
       ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))])),
       ctx.Prop("bool", ctx.Bool(True)),
     ]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok
@@ -55,6 +59,7 @@ pub fn falsy_if_test() {
   [parser.IfBlock(0, ["bool"], [parser.Property(0, ["foo", "bar"])])]
   |> engine.run(
     ctx.Dict([ctx.Prop("bool", ctx.Bool(False))]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok
@@ -65,6 +70,7 @@ pub fn truthy_unless_test() {
   [parser.UnlessBlock(0, ["bool"], [parser.Property(0, ["foo", "bar"])])]
   |> engine.run(
     ctx.Dict([ctx.Prop("bool", ctx.Bool(True))]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok
@@ -78,6 +84,7 @@ pub fn falsy_unless_test() {
       ctx.Prop("foo", ctx.Dict([ctx.Prop("bar", ctx.Int(42))])),
       ctx.Prop("bool", ctx.Bool(False)),
     ]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok
@@ -104,6 +111,7 @@ pub fn each_test() {
         ]),
       ),
     ]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok
@@ -119,6 +127,7 @@ pub fn empty_each_test() {
   ]
   |> engine.run(
     ctx.Dict([ctx.Prop("list", ctx.List([]))]),
+    dict.new(),
     string_builder.new(),
   )
   |> should.be_ok

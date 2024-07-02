@@ -1,3 +1,4 @@
+import gleam/dict
 import gleam/result
 import gleam/string_builder
 import handles/ctx
@@ -21,7 +22,16 @@ pub fn prepare(template: String) -> Result(Template, error.TokenizerError) {
 pub fn run(
   template: Template,
   ctx: ctx.Value,
+  partials: List(#(String, Template)),
 ) -> Result(String, error.RuntimeError) {
   let Template(ast) = template
-  engine.run(ast, ctx, string_builder.new())
+  let partials_dict =
+    partials
+    |> dict.from_list
+    |> dict.map_values(fn(_, template) {
+      let Template(ast) = template
+      ast
+    })
+
+  engine.run(ast, ctx, partials_dict, string_builder.new())
 }

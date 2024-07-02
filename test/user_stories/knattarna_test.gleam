@@ -1,3 +1,4 @@
+import gleam/dict
 import gleam/string_builder
 import gleeunit/should
 import handles/ctx
@@ -52,7 +53,7 @@ pub fn parser_test() {
 }
 
 pub fn engine_test() {
-  engine.run(expected_ast, input_context, string_builder.new())
+  engine.run(expected_ast, input_context, dict.new(), string_builder.new())
   |> should.be_ok
   |> should.equal(expected_output)
 }

@@ -4,6 +4,7 @@ import handles/internal/tokenizer
 pub type AST {
   Constant(index: Int, value: String)
   Property(index: Int, path: List(String))
+  Partial(index: Int, id: String, path: List(String))
   IfBlock(index: Int, path: List(String), children: List(AST))
   UnlessBlock(index: Int, path: List(String), children: List(AST))
   EachBlock(index: Int, path: List(String), children: List(AST))
@@ -18,6 +19,8 @@ pub fn run(tokens: List(tokenizer.Token), ast: List(AST)) -> List(AST) {
           run(tail, [Constant(index, value), ..ast])
         tokenizer.Property(index, path) ->
           run(tail, [Property(index, path), ..ast])
+        tokenizer.Partial(index, id, value) ->
+          run(tail, [Partial(index, id, value), ..ast])
         tokenizer.IfBlockStart(index, path) -> {
           let children = run(tail, [])
           run(list.drop(tail, list.length(children) + 1), [
