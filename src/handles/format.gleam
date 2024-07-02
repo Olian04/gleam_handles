@@ -60,28 +60,18 @@ pub fn format_tokenizer_error(
   case error {
     error.UnbalancedTag(index) ->
       transform_error(template, index, "Tag is missing closing braces }}")
-    error.MissingBlockArgument(index) ->
-      transform_error(template, index, "Tag is missing block argument")
-    error.MissingPropertyPath(index) ->
-      transform_error(template, index, "Tag is missing property path")
-    error.UnexpectedBlockKind(index) ->
-      transform_error(template, index, "Tag is of unknown block kind")
-    error.MissingPartialArgument(index) ->
-      transform_error(template, index, "Tag is missing property path")
+    error.MissingArgument(index) ->
+      transform_error(template, index, "Tag is missing an argument")
+    error.MissingBlockKind(index) ->
+      transform_error(template, index, "Tag is missing a block kind")
     error.MissingPartialId(index) ->
-      transform_error(template, index, "Tag is missing partial id")
-    error.UnexpectedMultiplePartialArguments(index) ->
-      transform_error(
-        template,
-        index,
-        "Tag is a partial which only takes a single argument",
-      )
-    error.UnexpectedBlockArgument(index) ->
-      transform_error(
-        template,
-        index,
-        "Tag is a closing block, which does not take any arguments",
-      )
+      transform_error(template, index, "Tag is missing a partial id")
+    error.UnexpectedBlockKind(index) ->
+      transform_error(template, index, "Tag is of an unknown block kind")
+    error.UnexpectedMultipleArguments(index) ->
+      transform_error(template, index, "Tag is receiving too many arguments")
+    error.UnexpectedArgument(index) ->
+      transform_error(template, index, "Tag is receiving too many arguments")
   }
 }
 

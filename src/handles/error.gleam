@@ -1,11 +1,10 @@
 pub type TokenizerError {
   UnbalancedTag(index: Int)
-  MissingPropertyPath(index: Int)
-  MissingBlockArgument(index: Int)
+  MissingArgument(index: Int)
+  MissingBlockKind(index: Int)
   MissingPartialId(index: Int)
-  MissingPartialArgument(index: Int)
-  UnexpectedMultiplePartialArguments(index: Int)
-  UnexpectedBlockArgument(index: Int)
+  UnexpectedMultipleArguments(index: Int)
+  UnexpectedArgument(index: Int)
   UnexpectedBlockKind(index: Int)
 }
 
