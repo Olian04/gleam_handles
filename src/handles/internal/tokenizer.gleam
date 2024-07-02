@@ -15,6 +15,15 @@ pub type Token {
   EachBlockEnd(index: Int)
 }
 
+/// {{
+const length_of_open_tag_syntax = 2
+
+/// {{#}} or {{#/}} or {{>}}
+const length_of_block_syntax = 5
+
+/// {{}}
+const length_of_property_syntax = 4
+
 fn split_body(body: String) -> List(String) {
   body
   |> string.trim
@@ -40,7 +49,9 @@ fn capture_tag_body(
 ) -> Result(#(String, String), error.TokenizerError) {
   input
   |> string.split_once("}}")
-  |> result.map_error(fn(_) { error.UnbalancedTag(index + 2) })
+  |> result.map_error(fn(_) {
+    error.UnbalancedTag(index + length_of_open_tag_syntax)
+  })
 }
 
 pub fn run(
@@ -52,83 +63,99 @@ pub fn run(
     "{{>" <> rest -> {
       use #(body, rest) <- result.try(capture_tag_body(rest, index))
       case split_body(body) {
-        [] -> Error(error.MissingPartialId(index + 2))
-        [_] -> Error(error.MissingArgument(index + 2))
+        [] -> Error(error.MissingPartialId(index + length_of_open_tag_syntax))
+        [_] -> Error(error.MissingArgument(index + length_of_open_tag_syntax))
         [id, arg] ->
           run(rest, index + string.length("{{>}}") + string.length(body), [
-            Partial(index + 2, id, split_arg(arg)),
+            Partial(index + length_of_open_tag_syntax, id, split_arg(arg)),
             ..tokens
           ])
-        _ -> Error(error.UnexpectedMultipleArguments(index + 2))
+        _ ->
+          Error(error.UnexpectedMultipleArguments(
+            index + length_of_open_tag_syntax,
+          ))
       }
     }
 
     "{{#" <> rest -> {
       use #(body, rest) <- result.try(capture_tag_body(rest, index))
       case split_body(body) {
-        [] -> Error(error.MissingBlockKind(index + 2))
-        [_] -> Error(error.MissingArgument(index + 2))
+        [] -> Error(error.MissingBlockKind(index + length_of_open_tag_syntax))
+        [_] -> Error(error.MissingArgument(index + length_of_open_tag_syntax))
         [kind, arg] ->
           case kind {
             "if" ->
-              run(rest, index + string.length("{{#}}") + string.length(body), [
-                IfBlockStart(index + 2, split_arg(arg)),
+              run(rest, index + length_of_block_syntax + string.length(body), [
+                IfBlockStart(index + length_of_open_tag_syntax, split_arg(arg)),
                 ..tokens
               ])
             "unless" ->
-              run(rest, index + string.length("{{#}}") + string.length(body), [
-                UnlessBlockStart(index + 2, split_arg(arg)),
+              run(rest, index + length_of_block_syntax + string.length(body), [
+                UnlessBlockStart(
+                  index + length_of_open_tag_syntax,
+                  split_arg(arg),
+                ),
                 ..tokens
               ])
             "each" ->
-              run(rest, index + string.length("{{#}}") + string.length(body), [
-                EachBlockStart(index + 2, split_arg(arg)),
+              run(rest, index + length_of_block_syntax + string.length(body), [
+                EachBlockStart(
+                  index + length_of_open_tag_syntax,
+                  split_arg(arg),
+                ),
                 ..tokens
               ])
             _ -> Error(error.UnexpectedBlockKind(index))
           }
-        _ -> Error(error.UnexpectedMultipleArguments(index + 2))
+        _ ->
+          Error(error.UnexpectedMultipleArguments(
+            index + length_of_open_tag_syntax,
+          ))
       }
     }
 
     "{{/" <> rest -> {
       use #(body, rest) <- result.try(capture_tag_body(rest, index))
       case split_body(body) {
-        [] -> Error(error.MissingBlockKind(index + 2))
-        [_, _] -> Error(error.UnexpectedArgument(index + 2))
+        [] -> Error(error.MissingBlockKind(index + length_of_open_tag_syntax))
+        [_, _] ->
+          Error(error.UnexpectedArgument(index + length_of_open_tag_syntax))
         [kind] ->
           case kind {
             "if" ->
-              run(rest, index + string.length("{{/}}") + string.length(body), [
-                IfBlockEnd(index + 2),
+              run(rest, index + length_of_block_syntax + string.length(body), [
+                IfBlockEnd(index + length_of_open_tag_syntax),
                 ..tokens
               ])
             "unless" ->
-              run(rest, index + string.length("{{/}}") + string.length(body), [
-                UnlessBlockEnd(index + 2),
+              run(rest, index + length_of_block_syntax + string.length(body), [
+                UnlessBlockEnd(index + length_of_open_tag_syntax),
                 ..tokens
               ])
             "each" ->
-              run(rest, index + string.length("{{/}}") + string.length(body), [
-                EachBlockEnd(index + 2),
+              run(rest, index + length_of_block_syntax + string.length(body), [
+                EachBlockEnd(index + length_of_open_tag_syntax),
                 ..tokens
               ])
             _ -> Error(error.UnexpectedBlockKind(index))
           }
-        _ -> Error(error.UnexpectedArgument(index + 2))
+        _ -> Error(error.UnexpectedArgument(index + length_of_open_tag_syntax))
       }
     }
 
     "{{" <> rest -> {
       use #(body, rest) <- result.try(capture_tag_body(rest, index))
       case split_body(body) {
-        [] -> Error(error.MissingArgument(index + 2))
+        [] -> Error(error.MissingArgument(index + length_of_open_tag_syntax))
         [arg] ->
-          run(rest, index + string.length("{{}}") + string.length(body), [
-            Property(index + 2, split_arg(arg)),
+          run(rest, index + length_of_property_syntax + string.length(body), [
+            Property(index + length_of_open_tag_syntax, split_arg(arg)),
             ..tokens
           ])
-        _ -> Error(error.UnexpectedMultipleArguments(index + 2))
+        _ ->
+          Error(error.UnexpectedMultipleArguments(
+            index + length_of_open_tag_syntax,
+          ))
       }
     }
 
