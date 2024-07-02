@@ -17,7 +17,7 @@ import handles/ctx
 pub fn main() {
   let assert Ok(template) = handles.prepare("Hello {{name}}")
   let assert Ok(string) =
-    handles.run(template, ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))]))
+    handles.run(template, ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))], []))
 
   io.debug(string)
 }
