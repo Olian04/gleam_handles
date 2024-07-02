@@ -15,11 +15,21 @@ import handles
 import handles/ctx
 
 pub fn main() {
-  let assert Ok(template) = handles.prepare("Hello {{name}}")
+  let assert Ok(greet_template) = prepare("Hello {{.}}!")
+  let assert Ok(template) =
+    prepare("{{>greet world}}\n{{>greet community}}\n{{>greet you}}")
   let assert Ok(string) =
-    handles.run(template, ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))], []))
+    run(
+      template,
+      ctx.Dict([
+        ctx.Prop("world", ctx.Str("World")),
+        ctx.Prop("community", ctx.Str("Gleam Community")),
+        ctx.Prop("you", ctx.Str("YOU")),
+      ]),
+      [#("greet", greet_template)],
+    )
 
-  io.debug(string)
+  io.println(string)
 }
 ```
 
