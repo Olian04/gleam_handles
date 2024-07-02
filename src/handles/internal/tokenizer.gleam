@@ -5,6 +5,7 @@ import handles/error
 pub type Token {
   Constant(index: Int, value: String)
   Property(index: Int, path: List(String))
+  Partial(index: Int, id: String, path: List(String))
   IfBlockStart(index: Int, path: List(String))
   IfBlockEnd(index: Int)
   UnlessBlockStart(index: Int, path: List(String))
@@ -19,6 +20,31 @@ pub fn run(
   tokens: List(Token),
 ) -> Result(List(Token), error.TokenizerError) {
   case input {
+    "{{>" <> rest ->
+      case rest |> string.split_once("}}") {
+        Ok(#(body, rest)) ->
+          case body |> string.trim |> string.split(" ") {
+            [""] -> Error(error.MissingPartialId(index + 2))
+            [id, arg] ->
+              case arg |> string.trim |> string.split(".") {
+                [""] -> Error(error.MissingPartialArgument(index + 2))
+                ["", ""] ->
+                  // {{>id .}}
+                  run(rest, index + 7 + string.length(arg), [
+                    Partial(index + 2, id, []),
+                    ..tokens
+                  ])
+                path ->
+                  run(rest, index + 7 + string.length(arg), [
+                    Partial(index + 2, id, path),
+                    ..tokens
+                  ])
+              }
+            _ -> Error(error.UnexpectedMultiplePartialArguments(index + 2))
+          }
+        Error(_) -> Error(error.UnbalancedTag(index + 2))
+      }
+
     "{{/if" <> rest ->
       case rest |> string.split_once("}}") {
         Ok(#("", rest)) ->
@@ -28,7 +54,7 @@ pub fn run(
     "{{#if" <> rest ->
       case rest |> string.split_once("}}") {
         Ok(#(arg, rest)) ->
-          case arg |> string.trim |> string.trim |> string.split(".") {
+          case arg |> string.trim |> string.split(".") {
             [""] -> Error(error.MissingBlockArgument(index + 2))
             ["", ""] ->
               // {{#if .}}
