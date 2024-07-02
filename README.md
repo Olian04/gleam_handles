@@ -33,6 +33,8 @@ pub fn main() {
 }
 ```
 
+Further documentation can be found at <https://hexdocs.pm/handles>.
+
 ## Usage Documentation
 
 __Handles__ a is very simple templating language that consists of a single primitive, the "tag".
@@ -99,8 +101,6 @@ The context of which properties are resolved while inside the each block will be
   {{name}}
 {{/each}}
 ```
-
-Further documentation can be found at <https://hexdocs.pm/handles>.
 
 ### Partial tags
 
