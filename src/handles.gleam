@@ -1,4 +1,6 @@
 import gleam/dict
+import gleam/list
+import gleam/pair
 import gleam/result
 import gleam/string_builder
 import handles/ctx
@@ -11,12 +13,15 @@ pub opaque type Template {
   Template(ast: List(parser.AST))
 }
 
+fn unwrap_template(template: Template) -> List(parser.AST) {
+  let Template(ast) = template
+  ast
+}
+
 pub fn prepare(template: String) -> Result(Template, error.TokenizerError) {
   tokenizer.run(template, 0, [])
-  |> result.map(fn(tokens) {
-    let ast = parser.run(tokens, [])
-    Template(ast)
-  })
+  |> result.map(parser.run(_, []))
+  |> result.map(Template)
 }
 
 pub fn run(
@@ -24,15 +29,9 @@ pub fn run(
   ctx: ctx.Value,
   partials: List(#(String, Template)),
 ) -> Result(String, error.RuntimeError) {
-  let Template(ast) = template
-  let partials_dict =
-    partials
-    |> dict.from_list
-    |> dict.map_values(fn(_, template) {
-      let Template(ast) = template
-      ast
-    })
-
-  engine.run(ast, ctx, partials_dict, string_builder.new())
+  partials
+  |> list.map(pair.map_second(_, unwrap_template))
+  |> dict.from_list
+  |> engine.run(unwrap_template(template), ctx, _, string_builder.new())
   |> result.map(string_builder.to_string)
 }
