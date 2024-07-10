@@ -21,18 +21,11 @@ pub fn eval(
 ) -> Result(string_builder.StringBuilder, error.RuntimeError) {
   case actions {
     [] -> Ok(builder)
-
-    [Stop(err)] -> Error(err)
-
     [Stop(err), ..] -> Error(err)
-
     [Append(value), ..rest_action] ->
       eval(rest_action, ctx, partials, string_builder.append(builder, value))
-
     [SetCtx(ctx), ..rest_action] -> eval(rest_action, ctx, partials, builder)
-
     [Continue([]), ..rest_action] -> eval(rest_action, ctx, partials, builder)
-
     [Continue([parser.Constant(_, value), ..rest_ast]), ..rest_action] ->
       eval(
         [Append(value), Continue(rest_ast), ..rest_action],
@@ -40,7 +33,6 @@ pub fn eval(
         partials,
         builder,
       )
-
     [Continue([parser.Property(index, path), ..rest_ast]), ..rest_action] ->
       case ctx_utils.get_property(path, ctx, index) {
         Ok(str) ->
@@ -52,7 +44,6 @@ pub fn eval(
           )
         Error(err) -> eval([Stop(err)], ctx, partials, builder)
       }
-
     [Continue([parser.Partial(index, id, path), ..rest_ast]), ..rest_action] ->
       case dict.get(partials, id) {
         Error(_) ->
