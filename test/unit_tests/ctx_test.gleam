@@ -5,10 +5,10 @@ import handles/internal/ctx_utils
 
 const expected_string = "expected"
 
-fn gen_levels(levels_to_go: Int) {
+fn gen_levels(levels_to_go: Int, curr: ctx.Value) -> ctx.Value {
   case levels_to_go {
-    0 -> ctx.Str(expected_string)
-    _ -> ctx.Dict([ctx.Prop("prop", gen_levels(levels_to_go - 1))])
+    0 -> curr
+    _ -> gen_levels(levels_to_go - 1, ctx.Dict([ctx.Prop("prop", curr)]))
   }
 }
 
@@ -24,7 +24,7 @@ pub fn drill_deep_test() {
   iterator.repeat("prop")
   |> iterator.take(depth)
   |> iterator.to_list
-  |> ctx_utils.get(gen_levels(depth), 0)
+  |> ctx_utils.get(gen_levels(depth, ctx.Str(expected_string)), 0)
   |> should.be_ok
   |> should.equal(ctx.Str(expected_string))
 }
