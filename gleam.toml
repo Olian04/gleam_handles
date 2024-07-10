@@ -11,3 +11,7 @@ gleam_stdlib = ">= 0.38.0 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.1.2 and < 2.0.0"
+
+[javascript]
+# Generate TypeScript .d.ts files
+typescript_declarations = true
