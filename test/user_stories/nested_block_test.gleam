@@ -76,5 +76,6 @@ pub fn parser_test() {
 pub fn engine_test() {
   engine.run(expected_ast, input_context, dict.new(), string_builder.new())
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal(expected_output)
 }

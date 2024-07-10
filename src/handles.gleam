@@ -34,4 +34,5 @@ pub fn run(
     })
 
   engine.run(ast, ctx, partials_dict, string_builder.new())
+  |> result.map(string_builder.to_string)
 }

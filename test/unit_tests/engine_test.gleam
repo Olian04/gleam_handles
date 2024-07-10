@@ -9,6 +9,7 @@ pub fn hello_world_test() {
   [parser.Constant(0, "Hello World")]
   |> engine.run(ctx.Dict([]), dict.new(), string_builder.new())
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("Hello World")
 }
 
@@ -20,6 +21,7 @@ pub fn hello_name_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("Hello Oliver")
 }
 
@@ -27,6 +29,7 @@ pub fn self_tag_test() {
   [parser.Property(0, [])]
   |> engine.run(ctx.Str("Hello"), dict.new(), string_builder.new())
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("Hello")
 }
 
@@ -38,6 +41,7 @@ pub fn nested_property_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("42")
 }
 
@@ -52,6 +56,7 @@ pub fn truthy_if_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("42")
 }
 
@@ -63,6 +68,7 @@ pub fn falsy_if_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("")
 }
 
@@ -74,6 +80,7 @@ pub fn truthy_unless_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("")
 }
 
@@ -88,6 +95,7 @@ pub fn falsy_unless_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("42")
 }
 
@@ -115,6 +123,7 @@ pub fn each_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("They are Knatte, Fnatte, Tjatte, and Kalle")
 }
 
@@ -131,5 +140,6 @@ pub fn empty_each_test() {
     string_builder.new(),
   )
   |> should.be_ok
+  |> string_builder.to_string
   |> should.equal("")
 }
