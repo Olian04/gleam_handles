@@ -20,7 +20,7 @@ pub fn drill_shallow_test() {
 }
 
 pub fn drill_deep_test() {
-  let depth = 100
+  let depth = 10_000
   iterator.repeat("prop")
   |> iterator.take(depth)
   |> iterator.to_list
