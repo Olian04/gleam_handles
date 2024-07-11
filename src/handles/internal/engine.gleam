@@ -13,7 +13,7 @@ type Action {
   Stop(error.RuntimeError)
 }
 
-pub fn eval(
+fn eval(
   actions: List(Action),
   ctx: ctx.Value,
   partials: dict.Dict(String, List(parser.AST)),
