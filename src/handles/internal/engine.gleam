@@ -7,10 +7,8 @@ import handles/internal/ctx_utils
 import handles/internal/parser
 
 type Action {
-  Append(String)
   SetCtx(ctx.Value)
-  Continue(List(parser.AST))
-  Stop(error.RuntimeError)
+  RunAst(List(parser.AST))
 }
 
 fn eval(
@@ -21,43 +19,40 @@ fn eval(
 ) -> Result(string_builder.StringBuilder, error.RuntimeError) {
   case actions {
     [] -> Ok(builder)
-    [Stop(err), ..] -> Error(err)
-    [Append(value), ..rest_action] ->
-      eval(rest_action, ctx, partials, string_builder.append(builder, value))
-    [SetCtx(ctx), ..rest_action] -> eval(rest_action, ctx, partials, builder)
-    [Continue([]), ..rest_action] -> eval(rest_action, ctx, partials, builder)
-    [Continue([parser.Constant(_, value), ..rest_ast]), ..rest_action] ->
+    [SetCtx(new_ctx), ..rest_action] ->
+      eval(rest_action, new_ctx, partials, builder)
+    [RunAst([]), ..rest_action] -> eval(rest_action, ctx, partials, builder)
+    [RunAst([parser.Constant(_, value), ..rest_ast]), ..rest_action] ->
       eval(
-        [Append(value), Continue(rest_ast), ..rest_action],
+        [RunAst(rest_ast), ..rest_action],
         ctx,
         partials,
-        builder,
+        string_builder.append(builder, value),
       )
-    [Continue([parser.Property(index, path), ..rest_ast]), ..rest_action] ->
+    [RunAst([parser.Property(index, path), ..rest_ast]), ..rest_action] ->
       case ctx_utils.get_property(path, ctx, index) {
-        Ok(str) ->
+        Error(err) -> Error(err)
+        Ok(value) ->
           eval(
-            [Append(str), Continue(rest_ast), ..rest_action],
+            [RunAst(rest_ast), ..rest_action],
             ctx,
             partials,
-            builder,
+            string_builder.append(builder, value),
           )
-        Error(err) -> eval([Stop(err)], ctx, partials, builder)
       }
-    [Continue([parser.Partial(index, id, path), ..rest_ast]), ..rest_action] ->
+    [RunAst([parser.Partial(index, id, path), ..rest_ast]), ..rest_action] ->
       case dict.get(partials, id) {
-        Error(_) ->
-          eval([Stop(error.UnknownPartial(index, id))], ctx, partials, builder)
-        Ok(partial) ->
+        Error(_) -> Error(error.UnknownPartial(index, id))
+        Ok(partial_ast) ->
           case ctx_utils.get(path, ctx, index) {
-            Error(err) -> eval([Stop(err)], ctx, partials, builder)
-            Ok(new_ctx) ->
+            Error(err) -> Error(err)
+            Ok(inner_ctx) ->
               eval(
                 [
-                  SetCtx(new_ctx),
-                  Continue(partial),
+                  SetCtx(inner_ctx),
+                  RunAst(partial_ast),
                   SetCtx(ctx),
-                  Continue(rest_ast),
+                  RunAst(rest_ast),
                   ..rest_action
                 ],
                 ctx,
@@ -66,53 +61,50 @@ fn eval(
               )
           }
       }
-    [
-      Continue([parser.IfBlock(index, path, children), ..rest_ast]),
-      ..rest_action
-    ] ->
+    [RunAst([parser.IfBlock(index, path, children), ..rest_ast]), ..rest_action] ->
       case ctx_utils.get_bool(path, ctx, index) {
-        Error(err) -> eval([Stop(err)], ctx, partials, builder)
+        Error(err) -> Error(err)
         Ok(False) ->
-          eval([Continue(rest_ast), ..rest_action], ctx, partials, builder)
+          eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
         Ok(True) ->
           eval(
-            [Continue(children), Continue(rest_ast), ..rest_action],
+            [RunAst(children), RunAst(rest_ast), ..rest_action],
             ctx,
             partials,
             builder,
           )
       }
     [
-      Continue([parser.UnlessBlock(index, path, children), ..rest_ast]),
+      RunAst([parser.UnlessBlock(index, path, children), ..rest_ast]),
       ..rest_action
     ] ->
       case ctx_utils.get_bool(path, ctx, index) {
-        Error(err) -> eval([Stop(err)], ctx, partials, builder)
+        Error(err) -> Error(err)
         Ok(True) ->
-          eval([Continue(rest_ast), ..rest_action], ctx, partials, builder)
+          eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
         Ok(False) ->
           eval(
-            [Continue(children), Continue(rest_ast), ..rest_action],
+            [RunAst(children), RunAst(rest_ast), ..rest_action],
             ctx,
             partials,
             builder,
           )
       }
     [
-      Continue([parser.EachBlock(index, path, children), ..rest_ast]),
+      RunAst([parser.EachBlock(index, path, children), ..rest_ast]),
       ..rest_action
     ] ->
       case ctx_utils.get_list(path, ctx, index) {
-        Error(err) -> eval([Stop(err)], ctx, partials, builder)
+        Error(err) -> Error(err)
         Ok([]) ->
-          eval([Continue(rest_ast), ..rest_action], ctx, partials, builder)
+          eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
         Ok(ctxs) ->
           eval(
             ctxs
               |> list.flat_map(fn(new_ctx) {
-                [SetCtx(new_ctx), Continue(children), SetCtx(ctx)]
+                [SetCtx(new_ctx), RunAst(children), SetCtx(ctx)]
               })
-              |> list.append([Continue(rest_ast), ..rest_action]),
+              |> list.append([RunAst(rest_ast), ..rest_action]),
             ctx,
             partials,
             builder,
@@ -127,5 +119,5 @@ pub fn run(
   partials: dict.Dict(String, List(parser.AST)),
   builder: string_builder.StringBuilder,
 ) -> Result(string_builder.StringBuilder, error.RuntimeError) {
-  eval([Continue(ast)], ctx, partials, builder)
+  eval([RunAst(ast)], ctx, partials, builder)
 }
