@@ -4,7 +4,7 @@ import handles/internal/tokenizer
 
 pub fn unexpected_token_test() {
   let template = "{{foo}d"
-  tokenizer.run(template, 0, [])
+  tokenizer.run(template)
   |> should.be_error
   |> format.format_tokenizer_error(template)
   |> should.be_ok
@@ -13,7 +13,7 @@ pub fn unexpected_token_test() {
 
 pub fn unexpected_end_of_template_test() {
   let template = "{{foo}"
-  tokenizer.run(template, 0, [])
+  tokenizer.run(template)
   |> should.be_error
   |> format.format_tokenizer_error(template)
   |> should.be_ok

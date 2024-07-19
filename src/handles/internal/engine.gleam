@@ -3,6 +3,7 @@ import gleam/list
 import gleam/string_builder
 import handles/ctx
 import handles/error
+import handles/internal/block
 import handles/internal/ctx_utils
 import handles/internal/parser
 
@@ -61,8 +62,14 @@ fn eval(
               )
           }
       }
-    [RunAst([parser.IfBlock(index, path, children), ..rest_ast]), ..rest_action] ->
-      case ctx_utils.get_bool(path, ctx, index) {
+    [
+      RunAst([
+        parser.Block(start_index, _, block.If, path, children),
+        ..rest_ast
+      ]),
+      ..rest_action
+    ] ->
+      case ctx_utils.get_bool(path, ctx, start_index) {
         Error(err) -> Error(err)
         Ok(False) ->
           eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
@@ -75,10 +82,13 @@ fn eval(
           )
       }
     [
-      RunAst([parser.UnlessBlock(index, path, children), ..rest_ast]),
+      RunAst([
+        parser.Block(start_index, _, block.Unless, path, children),
+        ..rest_ast
+      ]),
       ..rest_action
     ] ->
-      case ctx_utils.get_bool(path, ctx, index) {
+      case ctx_utils.get_bool(path, ctx, start_index) {
         Error(err) -> Error(err)
         Ok(True) ->
           eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
@@ -91,10 +101,13 @@ fn eval(
           )
       }
     [
-      RunAst([parser.EachBlock(index, path, children), ..rest_ast]),
+      RunAst([
+        parser.Block(start_index, _, block.Each, path, children),
+        ..rest_ast
+      ]),
       ..rest_action
     ] ->
-      case ctx_utils.get_list(path, ctx, index) {
+      case ctx_utils.get_list(path, ctx, start_index) {
         Error(err) -> Error(err)
         Ok([]) ->
           eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
@@ -117,7 +130,6 @@ pub fn run(
   ast: List(parser.AST),
   ctx: ctx.Value,
   partials: dict.Dict(String, List(parser.AST)),
-  builder: string_builder.StringBuilder,
 ) -> Result(string_builder.StringBuilder, error.RuntimeError) {
-  eval([RunAst(ast)], ctx, partials, builder)
+  eval([RunAst(ast)], ctx, partials, string_builder.new())
 }

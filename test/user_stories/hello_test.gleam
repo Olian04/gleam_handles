@@ -23,18 +23,19 @@ const expected_ast = [
 const expected_output = "Hello Oliver!"
 
 pub fn tokenizer_test() {
-  tokenizer.run(input_template, 0, [])
+  tokenizer.run(input_template)
   |> should.be_ok
   |> should.equal(expected_tokens)
 }
 
 pub fn parser_test() {
-  parser.run(expected_tokens, [])
+  parser.run(expected_tokens)
+  |> should.be_ok
   |> should.equal(expected_ast)
 }
 
 pub fn engine_test() {
-  engine.run(expected_ast, input_context, dict.new(), string_builder.new())
+  engine.run(expected_ast, input_context, dict.new())
   |> should.be_ok
   |> string_builder.to_string
   |> should.equal(expected_output)

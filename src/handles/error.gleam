@@ -1,11 +1,13 @@
 pub type TokenizerError {
   UnbalancedTag(index: Int)
+  UnbalancedBlock(index: Int)
   MissingArgument(index: Int)
   MissingBlockKind(index: Int)
   MissingPartialId(index: Int)
   UnexpectedMultipleArguments(index: Int)
   UnexpectedArgument(index: Int)
   UnexpectedBlockKind(index: Int)
+  UnexpectedBlockEnd(index: Int)
 }
 
 pub type RuntimeError {

@@ -72,6 +72,18 @@ pub fn format_tokenizer_error(
       transform_error(template, index, "Tag is receiving too many arguments")
     error.UnexpectedArgument(index) ->
       transform_error(template, index, "Tag is receiving too many arguments")
+    error.UnbalancedBlock(index) ->
+      transform_error(
+        template,
+        index,
+        "Tag is a block but is missing its corresponding end tag",
+      )
+    error.UnexpectedBlockEnd(index) ->
+      transform_error(
+        template,
+        index,
+        "Tag is a block end but is missing its corresponsing opening tag",
+      )
   }
 }
 

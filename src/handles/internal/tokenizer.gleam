@@ -3,17 +3,14 @@ import gleam/pair
 import gleam/result
 import gleam/string
 import handles/error
+import handles/internal/block
 
 pub type Token {
   Constant(index: Int, value: String)
   Property(index: Int, path: List(String))
   Partial(index: Int, id: String, path: List(String))
-  IfBlockStart(index: Int, path: List(String))
-  IfBlockEnd(index: Int)
-  UnlessBlockStart(index: Int, path: List(String))
-  UnlessBlockEnd(index: Int)
-  EachBlockStart(index: Int, path: List(String))
-  EachBlockEnd(index: Int)
+  BlockStart(index: Int, kind: block.Kind, path: List(String))
+  BlockEnd(index: Int, kind: block.Kind)
 }
 
 type Action {
@@ -99,14 +96,19 @@ fn tokenize(input: String, index: Int) -> Action {
               AddToken(
                 rest,
                 index + length_of_block_syntax + string.length(body),
-                IfBlockStart(index + length_of_open_tag_syntax, split_arg(arg)),
+                BlockStart(
+                  index + length_of_open_tag_syntax,
+                  block.If,
+                  split_arg(arg),
+                ),
               )
             ["unless", arg] ->
               AddToken(
                 rest,
                 index + length_of_block_syntax + string.length(body),
-                UnlessBlockStart(
+                BlockStart(
                   index + length_of_open_tag_syntax,
+                  block.Unless,
                   split_arg(arg),
                 ),
               )
@@ -114,8 +116,9 @@ fn tokenize(input: String, index: Int) -> Action {
               AddToken(
                 rest,
                 index + length_of_block_syntax + string.length(body),
-                EachBlockStart(
+                BlockStart(
                   index + length_of_open_tag_syntax,
+                  block.Each,
                   split_arg(arg),
                 ),
               )
@@ -141,19 +144,19 @@ fn tokenize(input: String, index: Int) -> Action {
               AddToken(
                 rest,
                 index + length_of_block_syntax + string.length(body),
-                IfBlockEnd(index + length_of_open_tag_syntax),
+                BlockEnd(index + length_of_open_tag_syntax, block.If),
               )
             ["unless"] ->
               AddToken(
                 rest,
                 index + length_of_block_syntax + string.length(body),
-                UnlessBlockEnd(index + length_of_open_tag_syntax),
+                BlockEnd(index + length_of_open_tag_syntax, block.Unless),
               )
             ["each"] ->
               AddToken(
                 rest,
                 index + length_of_block_syntax + string.length(body),
-                EachBlockEnd(index + length_of_open_tag_syntax),
+                BlockEnd(index + length_of_open_tag_syntax, block.Each),
               )
             [_] ->
               Stop(error.UnexpectedBlockKind(index + length_of_open_tag_syntax))
@@ -193,7 +196,7 @@ fn tokenize(input: String, index: Int) -> Action {
   }
 }
 
-pub fn run(
+pub fn do_run(
   input: String,
   index: Int,
   tokens: List(Token),
@@ -201,6 +204,10 @@ pub fn run(
   case tokenize(input, index) {
     Done -> Ok(list.reverse(tokens))
     Stop(err) -> Error(err)
-    AddToken(rest, index, token) -> run(rest, index, [token, ..tokens])
+    AddToken(rest, index, token) -> do_run(rest, index, [token, ..tokens])
   }
+}
+
+pub fn run(input: String) -> Result(List(Token), error.TokenizerError) {
+  do_run(input, 0, [])
 }

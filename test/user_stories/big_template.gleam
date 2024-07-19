@@ -1,6 +1,5 @@
 import gleam/dict
 import gleam/iterator
-import gleam/string_builder
 import gleeunit/should
 import handles/ctx
 import handles/internal/engine
@@ -31,24 +30,26 @@ fn generate_template(size: Int, sep: String) {
 pub fn tokenizer_test() {
   let big_template = generate_template(10_000, " ")
 
-  tokenizer.run(big_template, 0, [])
+  tokenizer.run(big_template)
   |> should.be_ok
 }
 
 pub fn parser_test() {
   let big_template = generate_template(10_000, " ")
 
-  tokenizer.run(big_template, 0, [])
+  tokenizer.run(big_template)
   |> should.be_ok
-  |> parser.run([])
+  |> parser.run
+  |> should.be_ok
 }
 
 pub fn engine_test() {
   let big_template = generate_template(10_000, " ")
 
-  tokenizer.run(big_template, 0, [])
+  tokenizer.run(big_template)
   |> should.be_ok
-  |> parser.run([])
-  |> engine.run(input_context, dict.new(), string_builder.new())
+  |> parser.run
+  |> should.be_ok
+  |> engine.run(input_context, dict.new())
   |> should.be_ok
 }
