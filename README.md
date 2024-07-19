@@ -11,6 +11,7 @@ gleam add handles
 
 ```gleam
 import gleam/io
+import gleam/string_builder
 import handles
 import handles/ctx
 
@@ -29,7 +30,9 @@ pub fn main() {
       [#("greet", greet_template)],
     )
 
-  io.println(string)
+  string
+  |> string_builder.to_string
+  |> io.println
 }
 ```
 
