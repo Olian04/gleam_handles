@@ -19,12 +19,17 @@ pub type AST {
 
 type ParseResult {
   EOF(List(AST))
-  BlockEnd(index: Int, block.Kind, List(AST), List(tokenizer.Token))
+  BlockEnd(
+    index: Int,
+    kind: block.Kind,
+    children: List(AST),
+    rest: List(tokenizer.Token),
+  )
 }
 
 fn parse(
-  tokens: List(tokenizer.Token),
   ast: List(AST),
+  tokens: List(tokenizer.Token),
 ) -> Result(ParseResult, error.TokenizerError) {
   case tokens {
     [] -> Ok(EOF(list.reverse(ast)))
@@ -32,24 +37,31 @@ fn parse(
       Ok(BlockEnd(index, kind, list.reverse(ast), tail))
 
     [tokenizer.Constant(index, value), ..tail] ->
-      parse(tail, [Constant(index, value), ..ast])
+      [Constant(index, value), ..ast]
+      |> parse(tail)
     [tokenizer.Property(index, path), ..tail] ->
-      parse(tail, [Property(index, path), ..ast])
+      [Property(index, path), ..ast]
+      |> parse(tail)
     [tokenizer.Partial(index, id, value), ..tail] ->
-      parse(tail, [Partial(index, id, value), ..ast])
+      [Partial(index, id, value), ..ast]
+      |> parse(tail)
 
     [tokenizer.BlockStart(start_index, start_kind, path), ..tail] ->
-      case parse(tail, []) {
+      case parse([], tail) {
         Error(err) -> Error(err)
-        Ok(EOF(_)) -> Error(error.UnbalancedBlock(start_index))
+        Ok(EOF(_)) ->
+          start_index
+          |> error.UnbalancedBlock
+          |> Error
         Ok(BlockEnd(end_index, end_kind, children, rest))
           if end_kind == start_kind
         ->
-          parse(rest, [
-            Block(start_index, end_index, start_kind, path, children),
-            ..ast
-          ])
-        Ok(BlockEnd(index, _, _, _)) -> Error(error.UnexpectedBlockEnd(index))
+          [Block(start_index, end_index, start_kind, path, children), ..ast]
+          |> parse(rest)
+        Ok(BlockEnd(index, _, _, _)) ->
+          index
+          |> error.UnexpectedBlockEnd
+          |> Error
       }
   }
 }
@@ -57,11 +69,14 @@ fn parse(
 pub fn run(
   tokens: List(tokenizer.Token),
 ) -> Result(List(AST), error.TokenizerError) {
-  parse(tokens, [])
+  parse([], tokens)
   |> result.try(fn(it) {
     case it {
       EOF(ast) -> Ok(ast)
-      BlockEnd(index, _, _, _) -> Error(error.UnexpectedBlockEnd(index))
+      BlockEnd(index, _, _, _) ->
+        index
+        |> error.UnexpectedBlockEnd
+        |> Error
     }
   })
 }

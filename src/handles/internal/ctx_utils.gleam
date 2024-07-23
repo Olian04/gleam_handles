@@ -51,9 +51,15 @@ pub fn get_property(
   get(path, root_ctx, index)
   |> result.try(fn(it) {
     case it {
-      ctx.Str(value) -> value |> Ok
-      ctx.Int(value) -> value |> int.to_string |> Ok
-      ctx.Float(value) -> value |> float.to_string |> Ok
+      ctx.Str(value) -> Ok(value)
+      ctx.Int(value) ->
+        value
+        |> int.to_string
+        |> Ok
+      ctx.Float(value) ->
+        value
+        |> float.to_string
+        |> Ok
       ctx.List(_) ->
         error.UnexpectedType(index, path, "List", ["Str", "Int", "Float"])
         |> Error
@@ -75,15 +81,22 @@ pub fn get_list(
   get(path, root_ctx, index)
   |> result.try(fn(it) {
     case it {
-      ctx.List(value) -> value |> Ok
-      ctx.Str(_) -> error.UnexpectedType(index, path, "Str", ["List"]) |> Error
-      ctx.Int(_) -> error.UnexpectedType(index, path, "Int", ["List"]) |> Error
+      ctx.List(value) -> Ok(value)
+      ctx.Str(_) ->
+        error.UnexpectedType(index, path, "Str", ["List"])
+        |> Error
+      ctx.Int(_) ->
+        error.UnexpectedType(index, path, "Int", ["List"])
+        |> Error
       ctx.Bool(_) ->
-        error.UnexpectedType(index, path, "Bool", ["List"]) |> Error
+        error.UnexpectedType(index, path, "Bool", ["List"])
+        |> Error
       ctx.Float(_) ->
-        error.UnexpectedType(index, path, "Float", ["List"]) |> Error
+        error.UnexpectedType(index, path, "Float", ["List"])
+        |> Error
       ctx.Dict(_) ->
-        error.UnexpectedType(index, path, "Dict", ["List"]) |> Error
+        error.UnexpectedType(index, path, "Dict", ["List"])
+        |> Error
     }
   })
 }
@@ -96,15 +109,22 @@ pub fn get_bool(
   get(path, root_ctx, index)
   |> result.try(fn(it) {
     case it {
-      ctx.Bool(value) -> value |> Ok
+      ctx.Bool(value) -> Ok(value)
       ctx.List(_) ->
-        error.UnexpectedType(index, path, "List", ["Bool"]) |> Error
-      ctx.Str(_) -> error.UnexpectedType(index, path, "Str", ["Bool"]) |> Error
-      ctx.Int(_) -> error.UnexpectedType(index, path, "Int", ["Bool"]) |> Error
+        error.UnexpectedType(index, path, "List", ["Bool"])
+        |> Error
+      ctx.Str(_) ->
+        error.UnexpectedType(index, path, "Str", ["Bool"])
+        |> Error
+      ctx.Int(_) ->
+        error.UnexpectedType(index, path, "Int", ["Bool"])
+        |> Error
       ctx.Float(_) ->
-        error.UnexpectedType(index, path, "Float", ["Bool"]) |> Error
+        error.UnexpectedType(index, path, "Float", ["Bool"])
+        |> Error
       ctx.Dict(_) ->
-        error.UnexpectedType(index, path, "Dict", ["Bool"]) |> Error
+        error.UnexpectedType(index, path, "Dict", ["Bool"])
+        |> Error
     }
   })
 }

@@ -24,42 +24,32 @@ fn eval(
       eval(rest_action, new_ctx, partials, builder)
     [RunAst([]), ..rest_action] -> eval(rest_action, ctx, partials, builder)
     [RunAst([parser.Constant(_, value), ..rest_ast]), ..rest_action] ->
-      eval(
-        [RunAst(rest_ast), ..rest_action],
-        ctx,
-        partials,
-        string_builder.append(builder, value),
-      )
+      [RunAst(rest_ast), ..rest_action]
+      |> eval(ctx, partials, string_builder.append(builder, value))
     [RunAst([parser.Property(index, path), ..rest_ast]), ..rest_action] ->
       case ctx_utils.get_property(path, ctx, index) {
         Error(err) -> Error(err)
         Ok(value) ->
-          eval(
-            [RunAst(rest_ast), ..rest_action],
-            ctx,
-            partials,
-            string_builder.append(builder, value),
-          )
+          [RunAst(rest_ast), ..rest_action]
+          |> eval(ctx, partials, string_builder.append(builder, value))
       }
     [RunAst([parser.Partial(index, id, path), ..rest_ast]), ..rest_action] ->
       case dict.get(partials, id) {
-        Error(_) -> Error(error.UnknownPartial(index, id))
+        Error(_) ->
+          error.UnknownPartial(index, id)
+          |> Error
         Ok(partial_ast) ->
           case ctx_utils.get(path, ctx, index) {
             Error(err) -> Error(err)
             Ok(inner_ctx) ->
-              eval(
-                [
-                  SetCtx(inner_ctx),
-                  RunAst(partial_ast),
-                  SetCtx(ctx),
-                  RunAst(rest_ast),
-                  ..rest_action
-                ],
-                ctx,
-                partials,
-                builder,
-              )
+              [
+                SetCtx(inner_ctx),
+                RunAst(partial_ast),
+                SetCtx(ctx),
+                RunAst(rest_ast),
+                ..rest_action
+              ]
+              |> eval(ctx, partials, builder)
           }
       }
     [
@@ -72,14 +62,11 @@ fn eval(
       case ctx_utils.get_bool(path, ctx, start_index) {
         Error(err) -> Error(err)
         Ok(False) ->
-          eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
+          [RunAst(rest_ast), ..rest_action]
+          |> eval(ctx, partials, builder)
         Ok(True) ->
-          eval(
-            [RunAst(children), RunAst(rest_ast), ..rest_action],
-            ctx,
-            partials,
-            builder,
-          )
+          [RunAst(children), RunAst(rest_ast), ..rest_action]
+          |> eval(ctx, partials, builder)
       }
     [
       RunAst([
@@ -91,14 +78,11 @@ fn eval(
       case ctx_utils.get_bool(path, ctx, start_index) {
         Error(err) -> Error(err)
         Ok(True) ->
-          eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
+          [RunAst(rest_ast), ..rest_action]
+          |> eval(ctx, partials, builder)
         Ok(False) ->
-          eval(
-            [RunAst(children), RunAst(rest_ast), ..rest_action],
-            ctx,
-            partials,
-            builder,
-          )
+          [RunAst(children), RunAst(rest_ast), ..rest_action]
+          |> eval(ctx, partials, builder)
       }
     [
       RunAst([
@@ -110,18 +94,13 @@ fn eval(
       case ctx_utils.get_list(path, ctx, start_index) {
         Error(err) -> Error(err)
         Ok([]) ->
-          eval([RunAst(rest_ast), ..rest_action], ctx, partials, builder)
+          [RunAst(rest_ast), ..rest_action]
+          |> eval(ctx, partials, builder)
         Ok(ctxs) ->
-          eval(
-            ctxs
-              |> list.flat_map(fn(new_ctx) {
-                [SetCtx(new_ctx), RunAst(children), SetCtx(ctx)]
-              })
-              |> list.append([RunAst(rest_ast), ..rest_action]),
-            ctx,
-            partials,
-            builder,
-          )
+          ctxs
+          |> list.flat_map(fn(new_ctx) { [SetCtx(new_ctx), RunAst(children)] })
+          |> list.append([SetCtx(ctx), RunAst(rest_ast), ..rest_action])
+          |> eval(ctx, partials, builder)
       }
   }
 }

@@ -14,7 +14,7 @@ pub type Token {
 }
 
 type Action {
-  AddToken(String, Int, Token)
+  AddToken(token: Token, new_index: Int, rest_of_input: String)
   Stop(error.TokenizerError)
   Done
 }
@@ -22,7 +22,7 @@ type Action {
 /// {{
 const length_of_open_tag_syntax = 2
 
-/// {{#}} or {{#/}} or {{>}}
+/// {{#}} or {{/}} or {{>}}
 const length_of_block_syntax = 5
 
 /// {{}}
@@ -54,8 +54,28 @@ fn capture_tag_body(
   input
   |> string.split_once("}}")
   |> result.map_error(fn(_) {
-    error.UnbalancedTag(index + length_of_open_tag_syntax)
+    index + length_of_open_tag_syntax
+    |> error.UnbalancedTag
   })
+}
+
+fn stop(index: Int, to_error: fn(Int) -> error.TokenizerError) -> Action {
+  index + length_of_open_tag_syntax
+  |> to_error
+  |> Stop
+}
+
+fn add_block_sized_token(
+  token: Token,
+  index: Int,
+  consumed: String,
+  rest: String,
+) {
+  AddToken(
+    token,
+    index + length_of_block_syntax + string.length(consumed),
+    rest,
+  )
 }
 
 fn tokenize(input: String, index: Int) -> Action {
@@ -66,20 +86,12 @@ fn tokenize(input: String, index: Int) -> Action {
         Error(err) -> Stop(err)
         Ok(#(body, rest)) ->
           case split_body(body) {
-            [] ->
-              Stop(error.MissingPartialId(index + length_of_open_tag_syntax))
-            [_] ->
-              Stop(error.MissingArgument(index + length_of_open_tag_syntax))
+            [] -> stop(index, error.MissingPartialId)
+            [_] -> stop(index, error.MissingArgument)
             [id, arg] ->
-              AddToken(
-                rest,
-                index + length_of_block_syntax + string.length(body),
-                Partial(index + length_of_open_tag_syntax, id, split_arg(arg)),
-              )
-            _ ->
-              Stop(error.UnexpectedMultipleArguments(
-                index + length_of_open_tag_syntax,
-              ))
+              Partial(index + length_of_open_tag_syntax, id, split_arg(arg))
+              |> add_block_sized_token(index, body, rest)
+            _ -> stop(index, error.UnexpectedMultipleArguments)
           }
       }
 
@@ -88,46 +100,31 @@ fn tokenize(input: String, index: Int) -> Action {
         Error(err) -> Stop(err)
         Ok(#(body, rest)) ->
           case split_body(body) {
-            [] ->
-              Stop(error.MissingBlockKind(index + length_of_open_tag_syntax))
-            [_] ->
-              Stop(error.MissingArgument(index + length_of_open_tag_syntax))
+            [] -> stop(index, error.MissingBlockKind)
+            [_] -> stop(index, error.MissingArgument)
             ["if", arg] ->
-              AddToken(
-                rest,
-                index + length_of_block_syntax + string.length(body),
-                BlockStart(
-                  index + length_of_open_tag_syntax,
-                  block.If,
-                  split_arg(arg),
-                ),
-              )
-            ["unless", arg] ->
-              AddToken(
-                rest,
-                index + length_of_block_syntax + string.length(body),
-                BlockStart(
-                  index + length_of_open_tag_syntax,
-                  block.Unless,
-                  split_arg(arg),
-                ),
-              )
-            ["each", arg] ->
-              AddToken(
-                rest,
-                index + length_of_block_syntax + string.length(body),
-                BlockStart(
-                  index + length_of_open_tag_syntax,
-                  block.Each,
-                  split_arg(arg),
-                ),
-              )
-            [_, _] ->
-              Stop(error.UnexpectedBlockKind(index + length_of_open_tag_syntax))
-            _ ->
-              Stop(error.UnexpectedMultipleArguments(
+              BlockStart(
                 index + length_of_open_tag_syntax,
-              ))
+                block.If,
+                split_arg(arg),
+              )
+              |> add_block_sized_token(index, body, rest)
+            ["unless", arg] ->
+              BlockStart(
+                index + length_of_open_tag_syntax,
+                block.Unless,
+                split_arg(arg),
+              )
+              |> add_block_sized_token(index, body, rest)
+            ["each", arg] ->
+              BlockStart(
+                index + length_of_open_tag_syntax,
+                block.Each,
+                split_arg(arg),
+              )
+              |> add_block_sized_token(index, body, rest)
+            [_, _] -> stop(index, error.UnexpectedBlockKind)
+            _ -> stop(index, error.UnexpectedMultipleArguments)
           }
       }
 
@@ -136,32 +133,19 @@ fn tokenize(input: String, index: Int) -> Action {
         Error(err) -> Stop(err)
         Ok(#(body, rest)) ->
           case split_body(body) {
-            [] ->
-              Stop(error.MissingBlockKind(index + length_of_open_tag_syntax))
-            [_, _] ->
-              Stop(error.UnexpectedArgument(index + length_of_open_tag_syntax))
+            [] -> stop(index, error.MissingBlockKind)
+            [_, _] -> stop(index, error.UnexpectedArgument)
             ["if"] ->
-              AddToken(
-                rest,
-                index + length_of_block_syntax + string.length(body),
-                BlockEnd(index + length_of_open_tag_syntax, block.If),
-              )
+              BlockEnd(index + length_of_open_tag_syntax, block.If)
+              |> add_block_sized_token(index, body, rest)
             ["unless"] ->
-              AddToken(
-                rest,
-                index + length_of_block_syntax + string.length(body),
-                BlockEnd(index + length_of_open_tag_syntax, block.Unless),
-              )
+              BlockEnd(index + length_of_open_tag_syntax, block.Unless)
+              |> add_block_sized_token(index, body, rest)
             ["each"] ->
-              AddToken(
-                rest,
-                index + length_of_block_syntax + string.length(body),
-                BlockEnd(index + length_of_open_tag_syntax, block.Each),
-              )
-            [_] ->
-              Stop(error.UnexpectedBlockKind(index + length_of_open_tag_syntax))
-            _ ->
-              Stop(error.UnexpectedArgument(index + length_of_open_tag_syntax))
+              BlockEnd(index + length_of_open_tag_syntax, block.Each)
+              |> add_block_sized_token(index, body, rest)
+            [_] -> stop(index, error.UnexpectedBlockKind)
+            _ -> stop(index, error.UnexpectedArgument)
           }
       }
 
@@ -170,17 +154,14 @@ fn tokenize(input: String, index: Int) -> Action {
         Error(err) -> Stop(err)
         Ok(#(body, rest)) ->
           case split_body(body) {
-            [] -> Stop(error.MissingArgument(index + length_of_open_tag_syntax))
+            [] -> stop(index, error.MissingArgument)
             [arg] ->
               AddToken(
-                rest,
-                index + length_of_property_syntax + string.length(body),
                 Property(index + length_of_open_tag_syntax, split_arg(arg)),
+                index + length_of_property_syntax + string.length(body),
+                rest,
               )
-            _ ->
-              Stop(error.UnexpectedMultipleArguments(
-                index + length_of_open_tag_syntax,
-              ))
+            _ -> stop(index, error.UnexpectedMultipleArguments)
           }
       }
     _ ->
@@ -190,13 +171,13 @@ fn tokenize(input: String, index: Int) -> Action {
         |> result.map(pair.map_second(_, fn(it) { "{{" <> it }))
       {
         Ok(#(str, rest)) ->
-          AddToken(rest, index + string.length(str), Constant(index, str))
-        _ -> AddToken("", index + string.length(input), Constant(index, input))
+          AddToken(Constant(index, str), index + string.length(str), rest)
+        _ -> AddToken(Constant(index, input), index + string.length(input), "")
       }
   }
 }
 
-pub fn do_run(
+fn do_run(
   input: String,
   index: Int,
   tokens: List(Token),
@@ -204,7 +185,7 @@ pub fn do_run(
   case tokenize(input, index) {
     Done -> Ok(list.reverse(tokens))
     Stop(err) -> Error(err)
-    AddToken(rest, index, token) -> do_run(rest, index, [token, ..tokens])
+    AddToken(token, index, rest) -> do_run(rest, index, [token, ..tokens])
   }
 }
 
