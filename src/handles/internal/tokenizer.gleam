@@ -70,7 +70,7 @@ fn add_block_sized_token(
   index: Int,
   consumed: String,
   rest: String,
-) {
+) -> Action {
   AddToken(
     token,
     index + length_of_block_syntax + string.length(consumed),
