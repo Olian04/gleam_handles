@@ -1,5 +1,5 @@
 name = "handles"
-version = "4.0.1"
+version = "5.0.0"
 
 description = "Handles is a templating language written in pure Gleam. Heavily inspired by Mustache and Handlebars.js"
 licences = ["MIT"]
@@ -7,7 +7,8 @@ repository = { type = "github", user = "olian04", repo = "gleam_handles" }
 gleam = ">= 1.0.0"
 
 [dependencies]
-gleam_stdlib = ">= 0.38.0 and < 1.0.0"
+gleam_stdlib = ">= 0.48.0 and < 1.0.0"
+gleam_yielder = ">= 1.1.0 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.1.2 and < 2.0.0"

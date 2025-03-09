@@ -1,5 +1,5 @@
 import gleam/dict
-import gleam/string_builder
+import gleam/string_tree
 import gleeunit/should
 import handles/ctx
 import handles/internal/block
@@ -50,7 +50,8 @@ const input_context = ctx.Dict(
 const expected_tokens = [
   tokenizer.BlockStart(2, block.Each, ["outer"]),
   tokenizer.BlockStart(17, block.Each, ["inner"]),
-  tokenizer.Property(32, ["value"]), tokenizer.BlockEnd(41, block.Each),
+  tokenizer.Property(32, ["value"]),
+  tokenizer.BlockEnd(41, block.Each),
   tokenizer.BlockEnd(50, block.Each),
 ]
 
@@ -89,6 +90,6 @@ pub fn parser_test() {
 pub fn engine_test() {
   engine.run(expected_ast, input_context, dict.new())
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal(expected_output)
 }

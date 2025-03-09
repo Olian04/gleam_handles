@@ -1,6 +1,6 @@
 import gleam/dict
 import gleam/list
-import gleam/string_builder
+import gleam/string_tree
 import handles/ctx
 import handles/error
 import handles/internal/block
@@ -16,8 +16,8 @@ fn eval(
   actions: List(Action),
   ctx: ctx.Value,
   partials: dict.Dict(String, List(parser.AST)),
-  builder: string_builder.StringBuilder,
-) -> Result(string_builder.StringBuilder, error.RuntimeError) {
+  builder: string_tree.StringTree,
+) -> Result(string_tree.StringTree, error.RuntimeError) {
   case actions {
     [] -> Ok(builder)
     [SetCtx(new_ctx), ..rest_action] ->
@@ -25,13 +25,13 @@ fn eval(
     [RunAst([]), ..rest_action] -> eval(rest_action, ctx, partials, builder)
     [RunAst([parser.Constant(_, value), ..rest_ast]), ..rest_action] ->
       [RunAst(rest_ast), ..rest_action]
-      |> eval(ctx, partials, string_builder.append(builder, value))
+      |> eval(ctx, partials, string_tree.append(builder, value))
     [RunAst([parser.Property(index, path), ..rest_ast]), ..rest_action] ->
       case ctx_utils.get_property(path, ctx, index) {
         Error(err) -> Error(err)
         Ok(value) ->
           [RunAst(rest_ast), ..rest_action]
-          |> eval(ctx, partials, string_builder.append(builder, value))
+          |> eval(ctx, partials, string_tree.append(builder, value))
       }
     [RunAst([parser.Partial(index, id, path), ..rest_ast]), ..rest_action] ->
       case dict.get(partials, id) {
@@ -109,6 +109,6 @@ pub fn run(
   ast: List(parser.AST),
   ctx: ctx.Value,
   partials: dict.Dict(String, List(parser.AST)),
-) -> Result(string_builder.StringBuilder, error.RuntimeError) {
-  eval([RunAst(ast)], ctx, partials, string_builder.new())
+) -> Result(string_tree.StringTree, error.RuntimeError) {
+  eval([RunAst(ast)], ctx, partials, string_tree.new())
 }

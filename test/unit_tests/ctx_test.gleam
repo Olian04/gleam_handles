@@ -1,4 +1,4 @@
-import gleam/iterator
+import gleam/yielder
 import gleeunit/should
 import handles/ctx
 import handles/internal/ctx_utils
@@ -21,9 +21,9 @@ pub fn drill_shallow_test() {
 
 pub fn drill_deep_test() {
   let depth = 10_000
-  iterator.repeat("prop")
-  |> iterator.take(depth)
-  |> iterator.to_list
+  yielder.repeat("prop")
+  |> yielder.take(depth)
+  |> yielder.to_list
   |> ctx_utils.get(gen_levels(depth, ctx.Str(expected_string)), 0)
   |> should.be_ok
   |> should.equal(ctx.Str(expected_string))

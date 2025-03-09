@@ -1,5 +1,5 @@
 import gleam/dict
-import gleam/iterator
+import gleam/yielder
 import gleeunit/should
 import handles/ctx
 import handles/internal/engine
@@ -21,20 +21,28 @@ const input_context = ctx.Dict(
   ],
 )
 
-fn generate_template(size: Int, sep: String) {
-  iterator.repeat("{{#each knattarna}}{{name}}, {{/each}}")
-  |> iterator.take(size)
-  |> iterator.fold("", fn(a, b) { a <> sep <> b })
+pub type TestSpec(a) {
+  Timeout(Int, fn() -> a)
 }
 
-pub fn tokenizer_test() {
+fn generate_template(size: Int, sep: String) {
+  yielder.repeat("{{#each knattarna}}{{name}}, {{/each}}")
+  |> yielder.take(size)
+  |> yielder.fold("", fn(a, b) { a <> sep <> b })
+}
+
+pub fn tokenizer_test_() {
+  use <- Timeout(10)
+
   let big_template = generate_template(10_000, " ")
 
   tokenizer.run(big_template)
   |> should.be_ok
 }
 
-pub fn parser_test() {
+pub fn parser_test_() {
+  use <- Timeout(10)
+
   let big_template = generate_template(10_000, " ")
 
   tokenizer.run(big_template)
@@ -43,7 +51,9 @@ pub fn parser_test() {
   |> should.be_ok
 }
 
-pub fn engine_test() {
+pub fn engine_test_() {
+  use <- Timeout(10)
+
   let big_template = generate_template(10_000, " ")
 
   tokenizer.run(big_template)
