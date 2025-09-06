@@ -1,4 +1,4 @@
-import gleam/string_builder
+import gleam/string_tree
 import gleeunit/should
 import handles
 import handles/ctx
@@ -14,7 +14,7 @@ pub fn partial_test() {
     #("hello", hello_template),
   ])
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal("Hello Oliver!")
 }
 
@@ -34,7 +34,7 @@ pub fn partial_multiple_test() {
     [#("hello", hello_template)],
   )
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal("Hello Knatte! Hello Fnatte! Hello Tjatte!")
 }
 
@@ -54,6 +54,6 @@ pub fn partial_nested_test() {
     #("exclaim", exclaim_template),
   ])
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal("Hello Oliver!")
 }

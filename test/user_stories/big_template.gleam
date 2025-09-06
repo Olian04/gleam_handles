@@ -1,5 +1,5 @@
 import gleam/dict
-import gleam/iterator
+import gleam/list
 import gleeunit/should
 import handles/ctx
 import handles/internal/engine
@@ -22,9 +22,8 @@ const input_context = ctx.Dict(
 )
 
 fn generate_template(size: Int, sep: String) {
-  iterator.repeat("{{#each knattarna}}{{name}}, {{/each}}")
-  |> iterator.take(size)
-  |> iterator.fold("", fn(a, b) { a <> sep <> b })
+  list.repeat("{{#each knattarna}}{{name}}, {{/each}}", size)
+  |> list.fold("", fn(a, b) { a <> sep <> b })
 }
 
 pub fn tokenizer_test() {

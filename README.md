@@ -11,7 +11,7 @@ gleam add handles
 
 ```gleam
 import gleam/io
-import gleam/string_builder
+import gleam/string_tree
 import handles
 import handles/ctx
 
@@ -31,7 +31,7 @@ pub fn main() {
     )
 
   string
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> io.println
 }
 ```

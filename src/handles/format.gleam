@@ -21,13 +21,13 @@ fn resolve_position(
           case char {
             "\n" ->
               resolve_position(
-                string.drop_left(input, 1),
+                string.drop_end(input, 1),
                 target_index,
                 Position(index + 1, row + 1, 0),
               )
             _ ->
               resolve_position(
-                string.drop_left(input, 1),
+                string.drop_end(input, 1),
                 target_index,
                 Position(index + 1, row, col + 1),
               )

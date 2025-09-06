@@ -1,4 +1,4 @@
-import gleam/string_builder
+import gleam/string_tree
 import gleeunit/should
 import handles
 import handles/ctx
@@ -11,7 +11,7 @@ pub fn each_test() {
     [],
   )
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal("yesyesyes")
 }
 
@@ -20,7 +20,7 @@ pub fn each_empty_test() {
   |> should.be_ok
   |> handles.run(ctx.Dict([ctx.Prop("prop", ctx.List([]))]), [])
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal("")
 }
 
@@ -29,6 +29,6 @@ pub fn each_current_context_test() {
   |> should.be_ok
   |> handles.run(ctx.List([ctx.Int(1), ctx.Int(2), ctx.Int(3)]), [])
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal("yesyesyes")
 }
