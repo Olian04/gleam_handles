@@ -2,7 +2,7 @@ import gleam/dict
 import gleam/list
 import gleam/pair
 import gleam/result
-import gleam/string_builder
+import gleam/string_tree
 import handles/ctx
 import handles/error
 import handles/internal/engine
@@ -20,7 +20,7 @@ fn unwrap_template(template: Template) -> List(parser.AST) {
 
 pub fn prepare(template: String) -> Result(Template, error.TokenizerError) {
   tokenizer.run(template)
-  |> result.try(parser.run(_))
+  |> result.try(parser.run)
   |> result.map(Template)
 }
 
@@ -28,7 +28,7 @@ pub fn run(
   template: Template,
   ctx: ctx.Value,
   partials: List(#(String, Template)),
-) -> Result(string_builder.StringBuilder, error.RuntimeError) {
+) -> Result(string_tree.StringTree, error.RuntimeError) {
   partials
   |> list.map(pair.map_second(_, unwrap_template))
   |> dict.from_list

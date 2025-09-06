@@ -1,5 +1,5 @@
 import gleam/dict
-import gleam/string_builder
+import gleam/string_tree
 import gleeunit/should
 import handles/ctx
 import handles/internal/engine
@@ -11,12 +11,14 @@ const input_template = "Hello {{name}}!"
 const input_context = ctx.Dict([ctx.Prop("name", ctx.Str("Oliver"))])
 
 const expected_tokens = [
-  tokenizer.Constant(0, "Hello "), tokenizer.Property(8, ["name"]),
+  tokenizer.Constant(0, "Hello "),
+  tokenizer.Property(8, ["name"]),
   tokenizer.Constant(14, "!"),
 ]
 
 const expected_ast = [
-  parser.Constant(0, "Hello "), parser.Property(8, ["name"]),
+  parser.Constant(0, "Hello "),
+  parser.Property(8, ["name"]),
   parser.Constant(14, "!"),
 ]
 
@@ -37,6 +39,6 @@ pub fn parser_test() {
 pub fn engine_test() {
   engine.run(expected_ast, input_context, dict.new())
   |> should.be_ok
-  |> string_builder.to_string
+  |> string_tree.to_string
   |> should.equal(expected_output)
 }
