@@ -6,7 +6,7 @@ licences = ["MIT"]
 
 repository = { type = "github", user = "olian04", repo = "gleam_handles" }
 
-gleam = ">= 1.0.0"
+gleam = ">= 1.4.0"
 
 internal_modules = [
   "handles/internal",
