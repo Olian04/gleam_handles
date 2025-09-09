@@ -40,7 +40,7 @@ Further documentation can be found at <https://hexdocs.pm/handles>.
 
 ## Usage Documentation
 
-__Handles__ a is very simple templating language that consists of a single primitive, the "tag".
+__Handles__ is a very simple templating language that consists of a single primitive, the "tag".
 A tag starts with two open braces `{{`, followed by a string body, and ends with two closing braces `}}`.
 There are three kinds of tags, [Property tags](#property-tags), [Block tags](#block-tags), and [Partial tags](#partial-tags).
 
