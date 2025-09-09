@@ -119,7 +119,7 @@ Accessing a property which was not passed into the template engine will result i
 
 The source code is structured in such a way that the compiled output when targeting JS does not use recursion in the main parts of the library (`tokenizer.gleam`, `parser.gleam`, `engine.gleam` & `ctx_utils.gleam`). This prevents the JS engine from throwing "Maximum call stack size exceeded" for regular use-cases. While most JS engines boast about implementing tail call optimization, the Gleam compiler is not yet advanced enough to properly take advantage of this. There for, any changes made to the code will need to be carefully inspected after compiling to JS to make sure that no recursion is introduced. This behavior is likely to change with changes to the Gleam compiler, so whenever a new version of the Gleam compiler is released, this library will need to be recompiled and checked (at least until the Gleam compiler becomes smart enough to properly utilize TCO in JS).
 
-Latest Gleam compiler version checked: `1.3.2`
+Latest Gleam compiler version checked: `1.12.0`
 
 Known recursion that needs to be resolved:
 
