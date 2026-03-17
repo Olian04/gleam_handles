@@ -19,3 +19,12 @@ pub fn unexpected_end_of_template_test() {
   |> should.be_ok
   |> should.equal("Tag is missing closing braces }} (row=0, col=2)")
 }
+
+pub fn unexpected_multiple_arguments_test() {
+  let template = "{{{{ foo }}"
+  tokenizer.run(template)
+  |> should.be_error
+  |> format.format_tokenizer_error(template)
+  |> should.be_ok
+  |> should.equal("Tag is receiving too many arguments (row=0, col=2)")
+}
