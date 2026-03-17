@@ -17,6 +17,27 @@ pub fn property_test() {
   |> should.equal([tokenizer.Property(2, ["foo"])])
 }
 
+pub fn property_with_spaces_test() {
+  "{{ foo }}"
+  |> tokenizer.run
+  |> should.be_ok
+  |> should.equal([tokenizer.Property(2, ["foo"])])
+}
+
+pub fn property_extra_braces_test() {
+  "{{{{foo}}"
+  |> tokenizer.run
+  |> should.be_ok
+  |> should.equal([tokenizer.Property(2, ["{{foo"])])
+}
+
+pub fn property_extra_braces_with_spaces_test() {
+  "{{{{ foo }}"
+  |> tokenizer.run
+  |> should.be_ok
+  |> should.equal([tokenizer.Property(2, ["{{ foo"])])
+}
+
 pub fn property_multiple_test() {
   "{{foo}} {{bar}}"
   |> tokenizer.run
