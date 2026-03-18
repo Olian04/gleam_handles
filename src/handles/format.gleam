@@ -1,10 +1,48 @@
 import gleam/int
+import gleam/list
 import gleam/string
 import handles/error
 
 type Position {
   Position(index: Int, row: Int, col: Int)
   OutOfBounds
+}
+
+fn spaces(count: Int) -> String {
+  let count = int.max(count, 0)
+  list.repeat(" ", count)
+  |> list.fold("", fn(acc, s) { acc <> s })
+}
+
+fn line_at(lines: List(String), target_row: Int) -> Result(String, Nil) {
+  let #(_, found) =
+    list.fold(lines, #(0, Error(Nil)), fn(state, line) {
+      let #(row, found) = state
+      case found {
+        Ok(_) -> #(row + 1, found)
+        Error(_) ->
+          case row == target_row {
+            True -> #(row + 1, Ok(line))
+            False -> #(row + 1, Error(Nil))
+          }
+      }
+    })
+  found
+}
+
+fn with_near_snippet(message: String, template: String, row: Int, col: Int) {
+  case line_at(string.split(template, "\n"), row) {
+    Ok(line) ->
+      Ok(
+        message
+        <> "\nNear:\n"
+        <> line
+        <> "\n"
+        <> spaces(col)
+        <> "^",
+      )
+    Error(_) -> Ok(message)
+  }
 }
 
 fn resolve_position(
@@ -41,13 +79,16 @@ fn resolve_position(
 fn transform_error(template: String, offset: Int, message: String) {
   case resolve_position(template, offset, Position(0, 0, 0)) {
     Position(_, row, col) ->
-      Ok(
+      with_near_snippet(
         message
-        <> " (row="
-        <> int.to_string(row)
-        <> ", col="
-        <> int.to_string(col)
-        <> ")",
+          <> " (row="
+          <> int.to_string(row)
+          <> ", col="
+          <> int.to_string(col)
+          <> ")",
+        template,
+        row,
+        col,
       )
     OutOfBounds -> Error(Nil)
   }
