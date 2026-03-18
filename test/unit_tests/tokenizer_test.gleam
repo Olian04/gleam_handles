@@ -31,11 +31,11 @@ pub fn property_extra_braces_test() {
   |> should.equal([tokenizer.Property(2, ["{{foo"])])
 }
 
-pub fn property_extra_braces_with_spaces_test() {
+pub fn extra_braces_with_space_is_invalid_kind_test() {
   "{{{{ foo }}"
   |> tokenizer.run
-  |> should.be_ok
-  |> should.equal([tokenizer.Property(2, ["{{ foo"])])
+  |> should.be_error
+  |> should.equal(error.UnexpectedMultipleArguments(2))
 }
 
 pub fn property_multiple_test() {
