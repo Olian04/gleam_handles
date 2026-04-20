@@ -32,13 +32,27 @@ const input_context = ctx.Dict(
               ),
             ],
           ),
+          ctx.Dict(
+            [
+              ctx.Prop(
+                "children",
+                ctx.List(
+                  [
+                    ctx.Dict([ctx.Prop("name", ctx.Str("Huey"))]),
+                    ctx.Dict([ctx.Prop("name", ctx.Str("Dewey"))]),
+                    ctx.Dict([ctx.Prop("name", ctx.Str("Louie"))]),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     ),
   ],
 )
 
-const expected_output = "Knatte\nFnatte\nTjatte\n"
+const expected_output = "Knatte\nFnatte\nTjatte\nHuey\nDewey\nLouie\n"
 
 pub fn nested_partials_test() {
   let root_template =
